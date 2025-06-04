@@ -4,7 +4,7 @@
   "type":"module",
   "main": "index.js",
   "scripts": {
-    "dev": "cd backend && nodemon index.js"
+    "migrate": "npx sequelize-cli db:migrate"
   },
   "keywords": [],
   "author": "",

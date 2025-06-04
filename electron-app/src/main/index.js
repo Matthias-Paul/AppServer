@@ -1,7 +1,14 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { spawn } from 'child_process'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+// Handle __dirname with ESM
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 
 function createWindow() {
   // Create the browser window.
@@ -19,6 +26,7 @@ function createWindow() {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -38,9 +46,33 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+    // 🚀 Start Express Server as a child process
+
+  const serverProcess = spawn(
+    process.execPath,
+    [join(__dirname, '../../backend/index.js')],
+    {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NODE_ENV: is.dev ? 'development' : 'production'
+      }
+    }
+  )
+
+  serverProcess.on('error', (err) => {
+    console.error('Failed to start server:', err)
+  })
+
+  serverProcess.on('exit', (code) => {
+    console.log(` Server exited with code: ${code}`)
+  })
+
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
