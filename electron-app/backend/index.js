@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import { getLocalIPAddress } from './utils/getLocalIP.js';
 import { testDbConnection } from './database/DB.config.js'
 import authRoute from "./routes/auth.route.js"
-
+   
 
 
 
