@@ -16,11 +16,10 @@ export default defineConfig({
         '@renderer': resolve('src/renderer/src')
       }
     },
-    plugins: [
-      react(),
-      tailwindcss()
-
-    ]
-
+    server: {
+      host: true, // important for LAN IP dev access
+      port: 3000
+    },
+    plugins: [react(), tailwindcss()]
   }
 })

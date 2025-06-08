@@ -1,118 +1,79 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { FaUser, FaBoxOpen, FaClipboardList, FaStore,FaRegFileAlt, FaFilm , FaPowerOff ,FaSignOutAlt } from 'react-icons/fa'
-import { MdPermMedia, MdBuild, MdHome, MdOndemandVideo   } from 'react-icons/md'
-import { FaUsersCog, FaCreditCard, FaChartBar, FaChartLine  } from 'react-icons/fa'
-import { RiNodeTree  } from 'react-icons/ri'
-import { FiSettings } from 'react-icons/fi'
-import { BiCameraMovie  } from 'react-icons/bi'
-import { HiHome, HiPlay  } from 'react-icons/hi'
+import { useState } from 'react'
+import { NavLink, Link } from 'react-router-dom'
+import { FaUser, FaCreditCard, FaChartLine, FaPowerOff, FaRegFileAlt } from 'react-icons/fa'
+import { MdOndemandVideo, MdHome } from 'react-icons/md'
+import { RiNodeTree } from 'react-icons/ri'
+import { FiSettings, FiChevronRight, FiChevronLeft } from 'react-icons/fi'
+import { HiHome } from 'react-icons/hi'
 
 const Sidebar = () => {
-  
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => !prev)
+  }
+
   return (
-    <>
-      <div className="min-h-full pb-10   overflow-y-auto rounded-2xl mx-4 mt-4   text-start  bg-[#1A1A1A] text-white w-full  ">
-        <div className=" ">
-          <Link className="font-medium text-xl ">
-            <div className=" py-6 px-9 ">Church Media Service</div>
-          </Link>
-        </div>
-        <nav className="flex flex-col ">
-          <NavLink
-            to="/admin" end
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4  px-9 rounded flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  px-9  rounded flex items-center justify-start gap-x-3 '}>
-            <HiHome className='w-5 h-5 ' />
-            <span className=" text-md "> Dashboard </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/users"
-            className={({ isActive }) =>
-              isActive
-                ? 'px-9 bg-black text-white py-4  rounded flex items-center justify-start gap-x-2 '
-                : 'px-9  text-white py-4  rounded flex items-center justify-start gap-x-3 '}>
-            <FaUser className='w-5 h-5 ' />
-            <span className=" text-md "> User Management </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/credit"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black px-9 text-white py-4  rounded flex items-center justify-start gap-x-2 '
-                : '  text-white px-9 py-4  rounded flex items-center justify-start gap-x-3 '}>
-            <FaCreditCard  className='w-5 h-5 ' />
-            <span className=" text-md "> Credit Management </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/media"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white px-9 py-4  rounded flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  rounded px-9 flex items-center justify-start gap-x-3 '}>
-            <MdOndemandVideo  className='w-5 h-5 ' />
-            <span className=" text-md "> Media Management </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/service"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4  rounded px-9 flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  rounded flex items-center px-9 justify-start gap-x-3 '}>
-            <FaRegFileAlt    className='w-5 h-5 ' />
-            <span className=" text-md "> Service Management </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/sales"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4  rounded flex items-center px-9 justify-start gap-x-2 '
-                : '  text-white py-4  rounded flex items-center justify-start px-9 gap-x-3 '}>
-            <FaChartLine  className='w-5 h-5 ' />
-            <span className=" text-md "> Sales Analytics </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/network"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4 px-9 rounded flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  rounded flex px-9 items-center justify-start gap-x-3 '}>
-            <RiNodeTree    className='w-5 h-5 ' />
-            <span className=" text-md "> Network & Connectivity </span>
-          </NavLink>
-
-           <NavLink
-            to="/admin/settings"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4 px-9 rounded flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  rounded flex px-9 items-center justify-start gap-x-3 '}>
-            <FiSettings  className='w-5 h-5 ' />
-            <span className=" text-md "> Settings </span>
-          </NavLink>
-
-           <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive
-                ? ' bg-black text-white py-4 px-9 rounded flex items-center justify-start gap-x-2 '
-                : '  text-white py-4  rounded flex px-9 items-center justify-start gap-x-3 '}>
-            <FaPowerOff   className='w-5 h-5 ' />
-            <span className=" text-md "> Logout </span>
-          </NavLink>
-
-
-
-        </nav>
+    <div
+      className={`min-h-full transition-all duration-300 ${isCollapsed ? 'w-[80px]   ' : ' w-[250px] mr-4  xl:w-[280px]  '} bg-[#0D47A1] text-[#E3F2FD] rounded-2xl mx-4 mt-4 overflow-y-auto`}
+    >
+      <div className="flex justify-between items-center px-4 py-6">
+        {!isCollapsed && <span className="text-xl pl-[9px] font-semibold">Church Media</span>}
+        <button onClick={toggleSidebar} className={` ${isCollapsed? "m-auto ":" mr-0 "  } cursor-pointer text-white mx-auto`}>
+          {isCollapsed ? (
+            <FiChevronRight className="w-5  h-5" />
+          ) : (
+            <FiChevronLeft className="w-5 h-5" />
+          )}
+        </button>
       </div>
-    </>
+
+      <nav className="flex flex-col">
+        {[
+          { to: '/admin', icon: <HiHome className="w-5 h-5" />, label: 'Dashboard', exact: true },
+          { to: '/admin/users', icon: <FaUser className="w-5 h-5" />, label: 'User Management' },
+          {
+            to: '/admin/credit',
+            icon: <FaCreditCard className="w-5 h-5" />,
+            label: 'Credit Management'
+          },
+          {
+            to: '/admin/media',
+            icon: <MdOndemandVideo className="w-5 h-5" />,
+            label: 'Media Management'
+          },
+          {
+            to: '/admin/service',
+            icon: <FaRegFileAlt className="w-5 h-5" />,
+            label: 'Service Management'
+          },
+          {
+            to: '/admin/sales',
+            icon: <FaChartLine className="w-5 h-5" />,
+            label: 'Sales Analytics'
+          },
+          {
+            to: '/admin/network',
+            icon: <RiNodeTree className="w-5 h-5" />,
+            label: 'Network & Connectivity'
+          },
+          { to: '/admin/settings', icon: <FiSettings className="w-5 h-5" />, label: 'Settings' },
+          { to: '/', icon: <FaPowerOff className="w-5 h-5" />, label: 'Logout' }
+        ].map(({ to, icon, label, exact }) => (
+          <NavLink
+            to={to}
+            end={exact}
+            key={to}
+            className={({ isActive }) =>
+              `${isActive ? 'text-[#0D47A1] bg-[#E3F2FD] ' : ''} py-4 px-4 flex items-center transition-all duration-200 ${isCollapsed ? 'justify-center' : 'justify-start gap-x-3 px-6'}`
+            }
+          >
+            {icon}
+            {!isCollapsed && <span className="text-md">{label}</span>}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
   )
 }
 

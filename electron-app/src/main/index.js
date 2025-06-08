@@ -1,13 +1,19 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
+import { getLocalIPAddress } from '../../backend/utils/getLocalIP.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
 // Handle __dirname with ESM
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+
+const PORT = process.env.PORT || 3000
+const LOCAL_IP = getLocalIPAddress()
+
+let mainWindow // Declare it globally so you can reuse it later if needed
 
 
 function createWindow() {
@@ -22,15 +28,11 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+    
   })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-
-    if (is.dev) {
-      mainWindow.webContents.openDevTools()
-    }
-
 
   })
 
@@ -38,6 +40,11 @@ function createWindow() {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
+
+
+    if (is.dev) {
+      mainWindow.webContents.openDevTools()
+    }
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -56,28 +63,26 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-    // 🚀 Start Express Server as a child process
+  // 🚀 Start Express Server as a child process
 
-  const serverProcess = spawn(
-    process.execPath,
-    [join(__dirname, '../../backend/index.js')],
-    {
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        NODE_ENV: is.dev ? 'development' : 'production'
-      }
+  const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      NODE_ENV: is.dev ? 'development' : 'production'
     }
-  )
+  })
 
   serverProcess.on('error', (err) => {
     console.error('Failed to start server:', err)
   })
 
+
+
+
   serverProcess.on('exit', (code) => {
     console.log(` Server exited with code: ${code}`)
   })
-
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

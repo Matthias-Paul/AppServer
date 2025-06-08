@@ -61,8 +61,8 @@ const UsersTable = () => {
           <div
             className={`  overflow-x-auto  relative rounded-sm lg:rounded-md `}
           >
-            <table className="  text-left min-w-full mx-auto text-[#1A1A1A]  ">
-              <thead className="font-bold text-[25px] border-b-[2px] border-[#1A1A1A]  ">
+            <table className="  text-left min-w-full mx-auto text-[#0D47A1]  ">
+              <thead className="font-bold text-[25px] border-b-[2px] border-[#0D47A1]  ">
                 <tr>
                   <th className="py-2 pr-4 sm:py-3 "> Username </th>
                   <th className="py-2 px-4 sm:py-3 "> Email </th>
@@ -76,7 +76,7 @@ const UsersTable = () => {
                 {users?.map((user, index) => (
                   <tr
                     key={user?._id}
-                    className={`border-b-[2px] border-[#1A1A1A] font-medium text-[20px] cursor-pointer  ${index === users?.length - 1 ? 'border-b-0' : ''} `}
+                    className={`border-b-[2px] border-[#0D47A1] font-medium text-[20px] cursor-pointer  ${index === users?.length - 1 ? 'border-b-0' : ''} `}
                   >
                     <td className="py-2 pr-4 sm:py-4  font-medium  ">
                       {user?.username}

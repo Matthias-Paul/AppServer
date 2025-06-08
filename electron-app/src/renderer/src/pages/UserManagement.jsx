@@ -38,8 +38,8 @@ const UserManagement = () => {
       <div className="pt-7 min-h-[400px] w-full pl-5 overflow-hidden ">
         <div>
           <div className="flex justify-between items-center  ">
-            <h2 className=" text-[#1A1A1A] font-bold text-3xl lg:text-5xl "> User Management </h2>
-            <button className="bg-[#1A1A1A] text-white text-xl lg:text-2xl cursor-pointer py-2 px-6 active:bg-black rounded-lg text-center  ">
+            <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> User Management </h2>
+            <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
               Add new user{' '}
             </button>
           </div>
@@ -48,32 +48,32 @@ const UserManagement = () => {
           <div className="flex my-5 gap-x-4 ">
             <button
               onClick={() => handleFilterChange('all')}
-              className={`font-bold border border-[#1A1A1A] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
-           ${filter === 'all' ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A]'}`}
+              className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
+           ${filter === 'all' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
             >
               {' '}
               All Users{' '}
             </button>
             <button
               onClick={() => handleFilterChange('admin')}
-              className={`font-bold border border-[#1A1A1A] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
-           ${filter === 'admin' ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A]'}`}
+              className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
+           ${filter === 'admin' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
             >
               {' '}
               Admins{' '}
             </button>
             <button
               onClick={() => handleFilterChange('sales-rep')}
-              className={`font-bold border border-[#1A1A1A] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
-           ${filter === 'sales-rep' ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A]'}`}
+              className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
+           ${filter === 'sales-rep' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
             >
               {' '}
               Sales Reps{' '}
             </button>
             <button
               onClick={() => handleFilterChange('client')}
-              className={`font-bold border border-[#1A1A1A] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
-           ${filter === 'client' ? 'bg-[#1A1A1A] text-white' : 'bg-white text-[#1A1A1A]'}`}
+              className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
+           ${filter === 'client' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
             >
               {' '}
               Clients{' '}

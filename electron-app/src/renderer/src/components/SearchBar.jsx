@@ -32,13 +32,13 @@ const SearchBar = ({placeholder}) => {
           <div className=" relative" >
             <input
               type="text"
-              className=" pl-[70px] w-full border border-[#1A1A1A] text-[25px] focus:outline-none rounded-lg py-[7px] pr-[4px] "
+              className=" pl-[70px] w-full border border-[#0D47A1] text-[25px] text-[#0D47A1] focus:outline-none rounded-lg py-[7px] pr-[4px] "
               value={searchTerm}
               placeholder={placeholder}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button type="submit" className=" left-5 top-[8px] absolute cursor-pointer ">
-              <HiMagnifyingGlass className="w-9 h-9  " />
+              <HiMagnifyingGlass className="w-9 h-9 text-[#0D47A1] " />
             </button>
           </div>
         </form>

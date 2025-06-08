@@ -1,4 +1,5 @@
-
+import fs from 'fs'
+import path from 'path'
 import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser"
@@ -15,17 +16,45 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+  const IP = getLocalIPAddress();
 
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:3000", IP],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   })
 );
 
+const frontendEnvPath = path.join(process.cwd(), '../electron-app/.env');
 
+let existingEnv = '';
+if (fs.existsSync(frontendEnvPath)) {
+  existingEnv = fs.readFileSync(frontendEnvPath, 'utf-8');
+}
+
+let envLines = existingEnv.split('\n');
+
+// Helper to update or append a key-value pair
+function setEnvValue(key, value) {
+  const lineIndex = envLines.findIndex(line => line.startsWith(`${key}=`));
+  const line = `${key}=${value}`;
+  if (lineIndex !== -1) {
+    envLines[lineIndex] = line; // Update existing
+  } else {
+    envLines.push(line); // Append new
+  }
+}
+
+// Set or update the VITE variables
+setEnvValue('VITE_BACKEND_IP', IP);
+setEnvValue('VITE_BACKEND_PORT', PORT);
+
+// Write updated .env content
+fs.writeFileSync(frontendEnvPath, envLines.join('\n'));
+
+console.log('Updated frontend .env at:', frontendEnvPath);
 
 app.use(express.json());
 
@@ -45,9 +74,11 @@ app.use("/api", authRoute)
 
 export function startServer() {
   const IP = getLocalIPAddress();
-  app.listen(PORT, IP, () => {
-    console.log(`Server running at http://${IP}:${PORT}`);
-  });
+ app.listen(PORT, IP, () => {
+  console.log(`Server running at:`);
+  console.log(`- Local IP:  http://${IP}:${PORT}`);
+});
+
 }
 
 
