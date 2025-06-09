@@ -2,6 +2,10 @@ import SearchBar from '../components/SearchBar'
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import UsersTable from '../components/UsersTable'
+import { useInfiniteQuery } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+
+import getBackendURL from '../components/GetBackendURL.jsx'
 
 const UserManagement = () => {
   const [searchParams] = useSearchParams()
@@ -33,9 +37,39 @@ const UserManagement = () => {
     navigate({ search: params.toString() })
   }
 
+  const token = localStorage.getItem('token')
+  const fetchUsers = async ({ pageParam = 1 }) => {
+    const baseURL = await getBackendURL()
+    console.log('base url', baseURL)
+    const res = await fetch(
+      `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=8`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    if (!res.ok) {
+      throw new Error('Failed to fetch users')
+    }
+    return res.json()
+  }
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['users', searchParams.toString()],
+    queryFn: fetchUsers,
+    getNextPageParam: (lastPage, pages) => {
+      return lastPage.hasNextPage ? pages.length + 1 : undefined
+    }
+  })
+
+  const users = data?.pages.flatMap((page) => page.users) || []
+
   return (
     <>
-      <div className="pt-7 min-h-[400px] w-full pl-5 overflow-hidden ">
+      <div className="pt-7 min-h-[400px] w-full pl-7 overflow-hidden ">
         <div>
           <div className="flex justify-between items-center  ">
             <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> User Management </h2>
@@ -80,9 +114,20 @@ const UserManagement = () => {
             </button>
           </div>
         </div>
-        <div className="max-h-[400px] pb-20 overflow-y-auto  " >
-        <UsersTable />
+        <div className="max-h-[400px] pb-20 overflow-y-auto  ">
+          <UsersTable isLoading={isLoading} users={users} />
 
+          {hasNextPage && (
+            <div className="flex justify-center items-center">
+              <button
+                className="rounded py-1 px-4 bg-green-600 hover:bg-green-500 my-4 text-white cursor-pointer"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -1,8 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain, session } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { spawn } from 'child_process'
-import { getLocalIPAddress } from '../../backend/utils/getLocalIP.js'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 
@@ -10,10 +9,7 @@ import { dirname, join } from 'path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const PORT = process.env.PORT || 3000
-const LOCAL_IP = getLocalIPAddress()
 
-let mainWindow // Declare it globally so you can reuse it later if needed
 
 
 function createWindow() {

@@ -7,6 +7,8 @@ import AdminLayout from './layouts/AdminLayout'
 import AdminHomePage from './pages/AdminHomePage'
 import UserManagement from './pages/UserManagement'
 import ProtectedRoute from './components/ProtectedRoute'
+import NetworkManagement from './pages/NetworkManagement'
+
 
 function App() {
   return (
@@ -22,7 +24,8 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminHomePage />} />
               <Route path="users" element={<UserManagement />} />
-              
+              <Route path="network" element={<NetworkManagement />} />
+
             </Route>
           </Route>
         </Routes>

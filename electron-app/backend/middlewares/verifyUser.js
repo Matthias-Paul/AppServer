@@ -6,23 +6,19 @@ dotenv.config();
 
 export const verifyUser = async (req, res, next) => {
   try {
-    const userToken = req.cookies.token;
+    const authHeader = req.headers.authorization;
 
-    if (!userToken) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: No token provided. Please log in!",
+        message: "Unauthorized: No token provided",
       });
     }
 
+    const token = authHeader.split(" ")[1];
     const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error("JWT_SECRET is not defined in .env");
-    }
 
-    const decoded = jwt.verify(userToken, secret);
-
-   
+    const decoded = jwt.verify(token, secret);
     const user = await User.findByPk(decoded.userId, {
       attributes: { exclude: ['password_hash'] },
     });
@@ -30,34 +26,17 @@ export const verifyUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",    
+        message: "User not found",
       });
     }
 
     req.user = user;
-
-
     next();
   } catch (error) {
-    console.error("JWT Error:", error.message);
-
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({
-        success: false,
-        message: "Token has expired. Please log in again.",
-      });
-    }
-
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token. Unauthorized.",
-      });
-    }
-
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: "Internal Server Error",
+      message: "Invalid or expired token",
     });
   }
 };
+

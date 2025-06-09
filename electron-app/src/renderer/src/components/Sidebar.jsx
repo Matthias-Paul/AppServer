@@ -19,7 +19,10 @@ const Sidebar = () => {
     >
       <div className="flex justify-between items-center px-4 py-6">
         {!isCollapsed && <span className="text-xl pl-[9px] font-semibold">Church Media</span>}
-        <button onClick={toggleSidebar} className={` ${isCollapsed? "m-auto ":" mr-0 "  } cursor-pointer text-white mx-auto`}>
+        <button
+          onClick={toggleSidebar}
+          className={` ${isCollapsed ? 'm-auto ' : ' mr-0 '} cursor-pointer text-white mx-auto`}
+        >
           {isCollapsed ? (
             <FiChevronRight className="w-5  h-5" />
           ) : (

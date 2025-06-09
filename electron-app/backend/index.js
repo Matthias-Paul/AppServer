@@ -5,8 +5,9 @@ import cors from 'cors';
 import cookieParser from "cookie-parser"
 import dotenv from "dotenv";
 import { getLocalIPAddress } from './utils/getLocalIP.js';
-import { testDbConnection } from './database/DB.config.js'
-import authRoute from "./routes/auth.route.js"
+import { testDbConnection } from './database/DB.config.js';
+import authRoute from "./routes/auth.route.js";
+import adminRoute from "./routes/admin.route.js";
    
 
 
@@ -16,14 +17,20 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-  const IP = getLocalIPAddress();
+let IP = '127.0.0.1'
+
+try {
+  IP = getLocalIPAddress()
+} catch (err) {
+  console.error('Failed to get local IP address:', err)
+}
+  console.log("IP", IP)
 
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:3000", IP],
+   origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
   })
 );
 
@@ -69,14 +76,16 @@ app.get('/api/ping', (req, res) => {
 
 
 app.use("/api", authRoute)
+app.use("/api", adminRoute)
+
+
 
 
 
 export function startServer() {
-  const IP = getLocalIPAddress();
  app.listen(PORT, IP, () => {
   console.log(`Server running at:`);
-  console.log(`- Local IP:  http://${IP}:${PORT}`);
+  console.log(`IP:  http://${IP}:${PORT}`);
 });
 
 }

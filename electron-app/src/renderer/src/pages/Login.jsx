@@ -22,7 +22,6 @@ const Login = () => {
       const res = await fetch(`${baseURL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           email,
           password
@@ -41,6 +40,7 @@ const Login = () => {
     onSuccess: (data) => {
       toast.success('Log in successful! Redirecting to admin dashboard...')
       dispatch(signInSuccess(data.user))
+      localStorage.setItem('token', data.token)
       console.log('login user:', data.user)
       setEmail('')
       setPassword('')

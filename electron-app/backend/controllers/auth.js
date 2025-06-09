@@ -59,6 +59,7 @@ export const registerUser = async (req, res, next) => {
       success: true,
       user: userWithoutPassword,
       message: "Signup successful!",
+      token
     });
   } catch (error) {
     console.log(error);
@@ -114,7 +115,8 @@ export const loginUser = async(req, res, next)=>{
                 createdAt:user.created_at,    
                 updatedAt:user.updated_at  
             },      
-            message:"Login Successful"
+            message:"Login Successful",
+            token
         })
     
     } catch (error) {
