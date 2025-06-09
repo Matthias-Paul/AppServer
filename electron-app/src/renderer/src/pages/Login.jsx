@@ -62,12 +62,14 @@ const Login = () => {
         <div className=" flex w-full px-[12px] justify-center items-center ">
           <form
             onSubmit={handleFormSubmit}
-            className="w-full  border-gray-200  max-w-[700px] px-20 rounded-lg pb-5 bg-white "
+            className="w-full   max-w-[700px] px-20 rounded-lg pb-5 bg-white "
           >
-            <h2 className=" text-2xl font-bold text-center mb-2 "> Hey there! </h2>
-            <p className=" text-center mb-4 ">Enter your username and password to login</p>
+            <h2 className=" text-2xl text-[#0D47A1]  font-bold text-center mb-2 "> Hey admin! </h2>
+            <p className=" text-center  text-[#0D47A1]  mb-4 ">
+              Enter your username and password to login
+            </p>
             <div className="mb-6">
-              <label id="email" className="block text-sm font-semibold mb-1 ">
+              <label id="email" className="block text-[#0D47A1]  text-sm font-semibold mb-1 ">
                 {' '}
                 Email{' '}
               </label>
@@ -76,13 +78,13 @@ const Login = () => {
                 placeholder="Enter Your Email Address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border px-2  py-3 w-full border-gray-400 rounded-md "
+                className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                 type="email"
               />
             </div>
 
             <div className="mb-3">
-              <label id="password" className="block text-sm font-semibold mb-1 ">
+              <label id="password" className="block text-[#0D47A1]  text-sm font-semibold mb-1 ">
                 {' '}
                 Password{' '}
               </label>
@@ -91,7 +93,7 @@ const Login = () => {
                 placeholder="Enter Your Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="border px-2 py-3 w-full border-gray-400 rounded-md "
+                className="border px-2 focus:outline-none py-3 w-full border-[#0D47A1]  text-[#0D47A1]  rounded-md "
                 type="password"
               />
             </div>
@@ -100,15 +102,15 @@ const Login = () => {
               type="submit"
               disabled={loginMutation.isPending}
               className={`w-full text-lg mb-[-15px] mt-6 rounded-lg font-semibold p-3 
-                ${loginMutation.isPending ? 'bg-gray-800 cursor-not-allowed text-white ' : 'bg-black hover:bg-gray-800 cursor-pointer text-white'}`}
+                ${loginMutation.isPending ? 'bg-[#0D47A1]  cursor-not-allowed text-white ' : 'bg-[#0D47A1]  cursor-pointer text-[#E3F2FD] '}`}
             >
               {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
             </button>
             {/* google auth button */}
 
-            <p className="mt-[12px] text-md text-center ">
+            <p className="mt-[15px] text-md text-[#0D47A1]   text-center ">
               Don't have an account?
-              <Link to="/register" className="text-blue-500 ml-1 ">
+              <Link to="/register" className="text-[#0D47A1]  ml-1 ">
                 Register
               </Link>
             </p>

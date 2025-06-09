@@ -4,7 +4,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import UsersTable from '../components/UsersTable'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-
 import getBackendURL from '../components/GetBackendURL.jsx'
 
 const UserManagement = () => {
