@@ -8,7 +8,7 @@ const UsersTable = ({ users, isLoading }) => {
       ) : users.length > 0 ? (
         <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
           <table className="text-left min-w-full mx-auto text-[#0D47A1]">
-            <thead className="font-bold text-[25px] border-b-[2px] border-[#0D47A1]">
+            <thead className="font-bold text-[25px] border-b-[0.5px] border-[#0D47A1]">
               <tr>
                 <th className="py-2 pr-4 sm:py-3">Username</th>
                 <th className="py-2 px-4 sm:py-3">Email</th>
@@ -21,7 +21,7 @@ const UsersTable = ({ users, isLoading }) => {
               {users?.map((user, index) => (
                 <tr
                   key={user?.id}
-                  className={`border-b-[2px] border-[#0D47A1] font-medium text-[20px] cursor-pointer ${
+                  className={`border-b-[0.5px] border-[#0D47A1] font-medium text-[20px] cursor-pointer ${
                     index === users?.length - 1 ? 'border-b-0' : ''
                   }`}
                 >

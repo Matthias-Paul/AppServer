@@ -99,7 +99,7 @@ const SalesAnalytics = () => {
         <div className="border flex-grow border-[#0D47A1] rounded-lg p-4 ">
           <h2 className="text-[#0D47A1] font-semibold text-2xl"> Top Services </h2>
           <div className="w-full">
-           { topServices.length > 0 ? (
+            {topServices.length > 0 ? (
               <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
                 <table className="text-left min-w-full mx-auto text-[#0D47A1]">
                   <thead className="font-semibold text-[20px] border-b-[2px] border-[#0D47A1]">
@@ -116,8 +116,12 @@ const SalesAnalytics = () => {
                           index === topServices?.length - 1 ? 'border-b-0' : ''
                         }`}
                       >
-                        <td className="py-2 pr-4 sm:py-4 font-medium">{service?.name}</td>
-                        <td className="py-2 px-4 sm:py-4 font-medium">{service?.revenue}</td>
+                        <td className="py-2 pr-4 sm:py-4 text-[16px] font-medium">
+                          {service?.name}
+                        </td>
+                        <td className="py-2 px-4 sm:py-4 text-[16px] font-medium">
+                          {service?.revenue}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

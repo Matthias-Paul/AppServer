@@ -8,7 +8,7 @@ const DashboardTable = ({ isLoading, activities }) => {
       ) : activities.length > 0 ? (
         <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
           <table className="text-left rounded-lg  min-w-full mx-auto text-[#0D47A1]">
-            <thead className="font-bold text-[25px] border-b-[2px] border-[#0D47A1]">
+            <thead className="font-bold text-[25px] border-b-[0.5px] border-[#0D47A1]">
               <tr>
                 <th className="py-2 pr-4 sm:py-3">Time</th>
                 <th className="py-2 px-4 sm:py-3">User</th>
@@ -20,13 +20,13 @@ const DashboardTable = ({ isLoading, activities }) => {
               {activities?.map((activity, index) => (
                 <tr
                   key={activity?.id}
-                  className={`border-b-[2px] border-[#0D47A1]  font-medium text-[20px] cursor-pointer ${
+                  className={`border-b-[0.5px] border-[#0D47A1]  font-medium text-[20px] cursor-pointer ${
                     index === activities?.length - 1 ? 'border-b-0' : ''
                   }`}
                 >
-                  <td className="py-2 pr-4 sm:py-4 pl-4 font-medium">{activity?.time}</td>
-                  <td className="py-2 px-4 sm:py-4 pl-4 font-medium">{activity?.email}</td>
-                  <td className="py-2 px-4 pl-4 sm:py-4">{activity?.action}</td>
+                  <td className="py-2 pr-4 sm:py-4  font-medium">{activity?.time}</td>
+                  <td className="py-2 px-4 sm:py-4  font-medium">{activity?.email}</td>
+                  <td className="py-2 px-4  sm:py-4">{activity?.action}</td>
                   
                   <td className="py-2 px-4 sm:py-4 font-medium">
                     {activity?.details}

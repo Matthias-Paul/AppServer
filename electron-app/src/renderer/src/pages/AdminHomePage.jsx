@@ -86,7 +86,7 @@ const AdminHomePage = () => {
             </div>
           </div>
           <div>
-            <h4 className="mt-2 text-xl text-[#0D47A1] ">Wellcome, Admin.</h4>
+            <h4 className="mt-2 font-semibold text-xl text-[#0D47A1] ">Wellcome, Admin.</h4>
             <h5 className="mt-2 text-lg text-[#0D47A1] ">Today: {currentDate} </h5>
           </div>
         </div>
@@ -110,8 +110,8 @@ const AdminHomePage = () => {
           </div>
         </div>
 
-          <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]   "  > Recents Activities</h2>
-          <div className="max-h-[400px] pb-20 overflow-y-auto ">
+          <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]    "  > Recents Activities</h2>
+          <div className="max-h-[400px] pb-20 mt-4 overflow-y-auto bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
           <DashboardTable activities={activities}  /> 
           {/* {hasNextPage && (
             <div className="flex justify-center items-center">
