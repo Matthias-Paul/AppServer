@@ -1,4 +1,6 @@
 const UsersTable = ({ users, isLoading }) => {
+
+  console.log(users)
   return (
     <div className="w-full">
       {isLoading ? (
@@ -28,15 +30,17 @@ const UsersTable = ({ users, isLoading }) => {
                   <td className="py-2 px-4 sm:py-4">{user?.role}</td>
                   <td className="py-2 px-4 sm:py-4">
                     {user?.role === 'admin'
-                      ? 'Admin'
+                      ? 'admin'
                       : user?.role === 'sales-rep'
                         ? 'N/A'
                         : user?.role === 'client'
                           ? Number(user?.credits).toFixed(2)
-                          : 'Admin'}
+                          : 'admin'}
                   </td>
                   <td className="py-2 px-4 sm:py-4 font-medium">
-                    {new Date(user?.createdAt).toLocaleDateString()}
+                    {user?.created_at
+                        ? new Date(user.created_at).toISOString().split('T')[0]
+                        : 'N/A'}
                   </td>
                 </tr>
               ))}

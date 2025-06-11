@@ -119,7 +119,7 @@ const UserManagement = () => {
           {hasNextPage && (
             <div className="flex justify-center items-center">
               <button
-                className="rounded py-1 px-4 bg-green-600 hover:bg-green-500 my-4 text-white cursor-pointer"
+                className="rounded py-1 px-4 bg-[#0D47A1] my-4 text-[#E3F2FD] cursor-pointer"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
               >
