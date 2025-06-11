@@ -31,6 +31,10 @@ Media.init({
     type: DataTypes.BIGINT,
     allowNull: false
   },
+  duration: {
+    type: DataTypes.STRING, 
+    allowNull: true 
+  },
   price: {
     type: DataTypes.DECIMAL(8, 2),
     allowNull: false

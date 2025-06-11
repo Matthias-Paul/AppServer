@@ -28,7 +28,7 @@ Service.init({
     allowNull: true
   },
   is_active: {
-    type: DataTypes.BOOLEAN,
+    type: DataTypes.BOOLEAN, 
     allowNull: false,
     defaultValue: true
   }

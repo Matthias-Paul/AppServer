@@ -28,6 +28,10 @@ export async function up(queryInterface, Sequelize) {
       type: Sequelize.BIGINT,
       allowNull: false,
     },
+     duration: {
+        type: Sequelize.STRING, 
+        allowNull: true
+      },
     price: {
       type: Sequelize.DECIMAL(8, 2),
       allowNull: false,

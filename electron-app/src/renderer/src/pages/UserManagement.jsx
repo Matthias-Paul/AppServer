@@ -78,7 +78,7 @@ const UserManagement = () => {
           </div>
           <SearchBar placeholder={'Search users by name, email, or role...'} />
 
-          <div className="flex my-5 gap-x-4 ">
+          <div className="flex flex-wrap my-5 gap-x-4 ">
             <button
               onClick={() => handleFilterChange('all')}
               className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center

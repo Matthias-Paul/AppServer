@@ -8,7 +8,9 @@ import AdminHomePage from './pages/AdminHomePage'
 import UserManagement from './pages/UserManagement'
 import ProtectedRoute from './components/ProtectedRoute'
 import NetworkManagement from './pages/NetworkManagement'
-
+import SalesAnalytics from './pages/SalesAnalytics'
+import MediaManagement from './pages/MediaManagement'
+import ServiceManagement from './pages/ServiceManagement'
 
 function App() {
   return (
@@ -25,6 +27,9 @@ function App() {
               <Route index element={<AdminHomePage />} />
               <Route path="users" element={<UserManagement />} />
               <Route path="network" element={<NetworkManagement />} />
+              <Route path="sales" element={<SalesAnalytics />} />
+              <Route path="media" element={<MediaManagement />}/>
+              <Route path="service" element={<ServiceManagement />}/>
 
             </Route>
           </Route>
