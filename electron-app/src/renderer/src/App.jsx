@@ -11,6 +11,8 @@ import NetworkManagement from './pages/NetworkManagement'
 import SalesAnalytics from './pages/SalesAnalytics'
 import MediaManagement from './pages/MediaManagement'
 import ServiceManagement from './pages/ServiceManagement'
+import CreditManagement from './pages/CreditManagement'
+
 
 function App() {
   return (
@@ -30,6 +32,7 @@ function App() {
               <Route path="sales" element={<SalesAnalytics />} />
               <Route path="media" element={<MediaManagement />}/>
               <Route path="service" element={<ServiceManagement />}/>
+              <Route path="credit" element={<CreditManagement />}/>
 
             </Route>
           </Route>

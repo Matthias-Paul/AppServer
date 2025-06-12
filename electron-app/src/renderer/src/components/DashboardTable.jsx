@@ -6,7 +6,7 @@ const DashboardTable = ({ isLoading, activities }) => {
       {isLoading ? (
         <div className="text-[#0D47A1] font-semibold text-lg">Loading...</div>
       ) : activities.length > 0 ? (
-        <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
+        <div className="overflow-x-auto w-[700px] lg:w-full mx-auto relative rounded-sm lg:rounded-md">
           <table className="text-left rounded-lg  min-w-full mx-auto text-[#0D47A1]">
             <thead className="font-bold text-[25px] border-b-[0.5px] border-[#0D47A1]">
               <tr>

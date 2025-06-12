@@ -101,7 +101,7 @@ const NetworkManagement = () => {
           </button>
         </div>
         <div className=" mt-8 grid grid-cols-2  gap-x-6 text-[#0D47A1]">
-          <div className="border rounded-xl flex flex-col items-start px-6 lg:px-12  justify-start border-[#0D47A1]   w-full ">
+          <div className="border rounded-xl flex flex-col items-start px-4 lg:px-8  justify-start border-[#0D47A1]   w-full ">
             <h2 className="my-4 font-bold text-[25px] "> Server Connection Details </h2>
             <div className="flex items-center justify-start font-semibold w-full mb-4 bg-[#F8F9FA] border border-[#E1E7F1] px-5 py-2 text-[20px] rounded">
               <BsCircleFill className="text-[#0D47A1] mr-2  w-5 h-5" /> Server Running - PORT{' '}
@@ -136,12 +136,12 @@ const NetworkManagement = () => {
               className="flex items-center focus:outline-none mt-1 font-semibold mb-4 w-full border border-[#E1E7F1] px-5 py-2 text-[20px] rounded justify-start"
             />
           </div>
-          <div className="border rounded-xl px-6 lg:px-12 flex pb-5 flex-col items-center justify-start border-[#0D47A1]  w-full ">
+          <div className="border rounded-xl px-4 lg:px-8 flex pb-5 flex-col items-center justify-start border-[#0D47A1]  w-full ">
             <h2 className="mt-4  font-bold text-center text-[25px] mb-5">
               {' '}
               QR Code For Clients Connection{' '}
             </h2>
-            <div className="border rounded-lg p-8 bg-white">
+            <div className="border mx-2 rounded-lg p-8 bg-white">
               <QRCode ref={qrRef} fgColor="#0D47A1" size={200} value={qrValue} />
               <h2 className="text-center font-bold text-[20px] mt-[10px]"> QR Code</h2>
             </div>
@@ -149,13 +149,13 @@ const NetworkManagement = () => {
             <div className="flex items-center gap-x-5 w-full justify-between">
               <button
                 onClick={downloadQR}
-                className=" active:text-[#0D47A1] active:bg-[#E3F2FD]  bg-[#0D47A1]  text-[#E3F2FD] text-xl xl:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center"
+                className=" active:text-[#0D47A1] active:bg-[#E3F2FD]  bg-[#0D47A1]  text-[#E3F2FD] text-lg xl:text-xl cursor-pointer py-2 px-4 rounded-lg text-center"
               >
                 Download QR
               </button>
               <button
                 onClick={printQR}
-                className="active:text-[#0D47A1] active:bg-[#E3F2FD]  bg-[#0D47A1]  text-[#E3F2FD] text-xl xl:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center"
+                className="active:text-[#0D47A1] active:bg-[#E3F2FD]  bg-[#0D47A1]  text-[#E3F2FD] text-lg xl:text-xl cursor-pointer py-2 px-4 rounded-lg text-center"
               >
                 Print QR
               </button>
