@@ -85,15 +85,15 @@ export const serviceValidator = [
 
   body('theme')
     .optional()
-    .isLength({ max: 100 }).withMessage('Theme must be at most 100 characters'),
+    .isLength({ max: 200 }).withMessage('Theme must be at most 200 characters'),
 
   body('banner_image')
     .optional()
     .isLength({ max: 500 }).withMessage('Banner image path must be at most 500 characters'),
 
   body('is_active')
-    .optional()
-    .isBoolean().withMessage('Is_active must be a boolean'),
+    .notEmpty().withMessage('Is active is required')
+    .isBoolean().withMessage('Is active must be a boolean'),
 ];
 
 export const serviceMediaValidator = [

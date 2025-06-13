@@ -1,5 +1,6 @@
 import fs from 'fs'
-import path from 'path'
+import path, { join, dirname } from 'path'
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser"
@@ -10,6 +11,9 @@ import authRoute from "./routes/auth.route.js";
 import adminRoute from "./routes/admin.route.js";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,9 +33,8 @@ app.use("/api", adminRoute);
 
 
 
-app.get('/api/ping', (req, res) => {
-  res.json({ message: '✅ Server is up and running!' });
-});
+app.use('/fileStorage', express.static(join(__dirname, 'fileStorage')));
+
 
 export async function startServer() {
   const { ip, ssid, password } = await getNetworkInfo();

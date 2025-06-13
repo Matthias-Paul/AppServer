@@ -12,6 +12,8 @@ import SalesAnalytics from './pages/SalesAnalytics'
 import MediaManagement from './pages/MediaManagement'
 import ServiceManagement from './pages/ServiceManagement'
 import CreditManagement from './pages/CreditManagement'
+import CreateNewService from './components/CreateNewService'
+import AddMediaToService from './components/AddMediaToService'
 
 
 function App() {
@@ -33,6 +35,8 @@ function App() {
               <Route path="media" element={<MediaManagement />}/>
               <Route path="service" element={<ServiceManagement />}/>
               <Route path="credit" element={<CreditManagement />}/>
+              <Route path="service/newService" element={<CreateNewService />}/>
+              <Route path="service/:id/addMedia" element={<AddMediaToService />}/>
 
             </Route>
           </Route>

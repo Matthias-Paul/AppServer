@@ -1,6 +1,6 @@
 import SearchBar from '../components/SearchBar'
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import adminPic from '../assets/adminPics.png'
 
 const ServiceManagement = () => {
@@ -70,9 +70,11 @@ const ServiceManagement = () => {
       <div className="pt-7 min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
         <div className="flex justify-between items-center  ">
           <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> Service Management </h2>
-          <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
-            Create New Service
-          </button>
+          <Link to="newService">
+            <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
+              Create New Service
+            </button>
+          </Link>
         </div>
         <SearchBar placeholder={'Search services...'} />
         <div className="flex flex-wrap my-5 gap-x-4 ">

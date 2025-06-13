@@ -11,6 +11,8 @@ const NetworkManagement = () => {
   const [serverIp, setServerIp] = useState(backendIp)
   const [serverPort, setServerPort] = useState(backendPort)
   const [ssid, setSsid] = useState(backendSSID)
+  const [churchName, setChurchName] = useState('')
+
   const [password, setPassword] = useState('')
 
   const qrRef = useRef(null)
@@ -65,7 +67,7 @@ const NetworkManagement = () => {
   }
 
   const handleGenerateQRCode = () => {
-    if (!serverIp || !serverPort || !ssid || !password) {
+    if (!serverIp || !serverPort || !ssid || !password || !churchName) {
       toast.error('All fields are required!')
       return
     }
@@ -73,6 +75,7 @@ const NetworkManagement = () => {
     setServerPort(serverPort)
     setSsid(ssid)
     setPassword(password)
+    setChurchName(churchName)
     toast.success('QR Code generated successfully!')
   }
   const qrValue = useMemo(() => {
@@ -80,9 +83,10 @@ const NetworkManagement = () => {
       server_ip: serverIp,
       server_port: serverPort,
       SSID: ssid,
-      password: password
+      password: password,
+      churchName: churchName
     })
-  }, [serverIp, serverPort, ssid, password])
+  }, [serverIp, serverPort, ssid, password, churchName])
 
   console.log(qrValue)
 
@@ -133,6 +137,13 @@ const NetworkManagement = () => {
               type="password"
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
+              className="flex items-center focus:outline-none mt-1 font-semibold mb-4 w-full border border-[#E1E7F1] px-5 py-2 text-[20px] rounded justify-start"
+            />
+            <h2 className=" font-bold text-[20px] "> Church Name </h2>
+            <input
+              type="text"
+              onChange={(e) => setChurchName(e.target.value)}
+              placeholder="Enter church name"
               className="flex items-center focus:outline-none mt-1 font-semibold mb-4 w-full border border-[#E1E7F1] px-5 py-2 text-[20px] rounded justify-start"
             />
           </div>

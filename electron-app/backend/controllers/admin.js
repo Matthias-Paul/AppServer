@@ -1,5 +1,10 @@
+import fs from 'fs'
+import path from 'path'
 import User from "../models/users.model.js";
 import { Op } from "sequelize";
+import Service from "../models/service.model.js";
+import { validationResult, matchedData } from "express-validator"
+
 
 export const getUsers = async (req, res) => {
   try {
@@ -55,3 +60,31 @@ export const getUsers = async (req, res) => {
     });
   }
 };
+
+
+
+export const createService = (req, res)=>{
+const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        // If there are validation errors, return the first error message
+        return res.status(400).json({
+            statusCode: 400,
+            success: false,        
+            message: errors.array()[0].msg 
+        }); 
+    }        
+  
+  try {
+        const { name, theme, description, isActive, fileName } = matchedData
+
+
+  } catch (error) {
+   console.error("GetUsers error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    }); 
+  }
+}
