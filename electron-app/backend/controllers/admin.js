@@ -63,20 +63,39 @@ export const getUsers = async (req, res) => {
 
 
 
-export const createService = (req, res)=>{
-const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-        // If there are validation errors, return the first error message
-        return res.status(400).json({
-            statusCode: 400,
-            success: false,        
-            message: errors.array()[0].msg 
-        }); 
-    }        
+export const createService = async(req, res)=>{
+      
   
   try {
-        const { name, theme, description, isActive, fileName } = matchedData
+        const { name, theme, description, isActive } = req.body
+        if(!name){
+          return res.status(400).json({
+            success: false,
+            message: "Name is required",
+          }); 
+        }
+// Handle file upload
+  let bannerPath = null;
+    if (req.file) {
+      bannerPath = `/fileStorage/images/${req.file.filename}`;
+    }
+     console.log(bannerPath)
+    const service = await Service.create({
+      name,
+      description,
+      theme,
+      is_active: isActive === 'true',
+      banner_image: bannerPath,
+    });
+
+
+    
+    return res.status(201).json({
+      success: true,
+      id:service.id,
+      message: 'Service created successfully',
+      service,
+    })
 
 
   } catch (error) {
@@ -86,5 +105,34 @@ const errors = validationResult(req);
       success: false,
       message: "Internal Server Error",
     }); 
+  }
+}
+
+export const getServices =async(req, res)=>{
+
+  try {
+
+    const { id } = req.params
+
+    const serviceDetails = await Service.findByPk(id)
+    if(!serviceDetails){
+      return res.status(404).json({
+      success: false,
+      message: "Service not found",
+    }); 
+    }
+
+    return res.status(200).json({
+      success: true,
+      serviceDetails
+    }); 
+  
+  } catch (error) {
+    console.error("serviceDetails error:", error.message);
+return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    }); 
+    
   }
 }

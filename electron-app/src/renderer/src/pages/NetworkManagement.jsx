@@ -11,7 +11,7 @@ const NetworkManagement = () => {
   const [serverIp, setServerIp] = useState(backendIp)
   const [serverPort, setServerPort] = useState(backendPort)
   const [ssid, setSsid] = useState(backendSSID)
-  const [churchName, setChurchName] = useState('')
+  const [churchName, setChurchName] = useState('St Michael')// this should  come from  redux  state
 
   const [password, setPassword] = useState('')
 
@@ -84,7 +84,7 @@ const NetworkManagement = () => {
       server_port: serverPort,
       SSID: ssid,
       password: password,
-      churchName: churchName
+      churchName:churchName
     })
   }, [serverIp, serverPort, ssid, password, churchName])
 
@@ -137,13 +137,6 @@ const NetworkManagement = () => {
               type="password"
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
-              className="flex items-center focus:outline-none mt-1 font-semibold mb-4 w-full border border-[#E1E7F1] px-5 py-2 text-[20px] rounded justify-start"
-            />
-            <h2 className=" font-bold text-[20px] "> Church Name </h2>
-            <input
-              type="text"
-              onChange={(e) => setChurchName(e.target.value)}
-              placeholder="Enter church name"
               className="flex items-center focus:outline-none mt-1 font-semibold mb-4 w-full border border-[#E1E7F1] px-5 py-2 text-[20px] rounded justify-start"
             />
           </div>

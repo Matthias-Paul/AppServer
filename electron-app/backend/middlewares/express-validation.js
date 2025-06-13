@@ -74,27 +74,27 @@ export const mediaValidator = [
     .isDecimal({ decimal_digits: '0,2' }).withMessage('Price must be a valid decimal (max 2 decimal places)')
 ];
 
-export const serviceValidator = [
-  body('name')
-    .notEmpty().withMessage('Name is required')
-    .isLength({ max: 255 }).withMessage('Name must be at most 255 characters'),
+// export const serviceValidator = [
+//   body('name')
+//     .notEmpty().withMessage('Name is required')
+//     .isLength({ max: 255 }).withMessage('Name must be at most 255 characters'),
 
-  body('description')
-    .optional()
-    .isString().withMessage('Description must be a string'),
+//   body('description')
+//     .optional()
+//     .isString().withMessage('Description must be a string'),
 
-  body('theme')
-    .optional()
-    .isLength({ max: 200 }).withMessage('Theme must be at most 200 characters'),
+//   body('theme')
+//     .optional()
+//     .isLength({ max: 200 }).withMessage('Theme must be at most 200 characters'),
 
-  body('banner_image')
-    .optional()
-    .isLength({ max: 500 }).withMessage('Banner image path must be at most 500 characters'),
+//   body('banner_image')
+//     .optional()
+//     .isLength({ max: 500 }).withMessage('Banner image path must be at most 500 characters'),
 
-  body('is_active')
-    .notEmpty().withMessage('Is active is required')
-    .isBoolean().withMessage('Is active must be a boolean'),
-];
+//   body('is_active')
+//     .notEmpty().withMessage('Is active is required')
+//     .isBoolean().withMessage('Is active must be a boolean'),
+// ];
 
 export const serviceMediaValidator = [
   body('service_id')

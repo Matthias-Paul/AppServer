@@ -1,6 +1,5 @@
 import fs from 'fs'
-import path, { join, dirname } from 'path'
-import { fileURLToPath } from 'url';
+import path from 'path'
 import express from 'express';
 import cors from 'cors';
 import cookieParser from "cookie-parser"
@@ -12,8 +11,6 @@ import adminRoute from "./routes/admin.route.js";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,7 +20,8 @@ app.use(cors({
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
-app.use(express.json());
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
 
 app.use("/api", authRoute);
 app.use("/api", adminRoute);
@@ -33,7 +31,7 @@ app.use("/api", adminRoute);
 
 
 
-app.use('/fileStorage', express.static(join(__dirname, 'fileStorage')));
+app.use('/fileStorage', express.static(path.join(process.cwd(), 'backend/fileStorage')))
 
 
 export async function startServer() {

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaArrowLeft } from 'react-icons/fa'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
@@ -6,6 +6,7 @@ import getBackendURL from './GetBackendURL'
 import toast from 'react-hot-toast'
 
 const CreateNewService = () => {
+  const navigate = useNavigate()
   const [fileName, setFileName] = useState('')
   const [name, setName] = useState('')
   const [theme, setTheme] = useState('')
@@ -17,12 +18,16 @@ const CreateNewService = () => {
       setFileName(e.target.files[0].name)
     }
   }
+  const token = localStorage.getItem('token')
 
   const createService = async (formData) => {
     const baseURL = await getBackendURL()
     console.log('base url', baseURL)
     const res = await fetch(`${baseURL}/api/services`, {
       method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData
     })
 
@@ -46,6 +51,7 @@ const CreateNewService = () => {
       setIsActive(true)
       setFileName('')
       document.getElementById('file-upload').value = ''
+      navigate(`/admin/service/${data.id}/addMedia`)
     },
     onError: (error) => {
       toast.error(error.message)
@@ -59,7 +65,7 @@ const CreateNewService = () => {
     formData.append('name', name)
     formData.append('description', description)
     formData.append('theme', theme)
-    formData.append('isActive', isActive)
+    formData.append('isActive', isActive.toString())
 
     const fileInput = document.getElementById('file-upload')
     if (fileInput && fileInput.files.length > 0) {
@@ -149,7 +155,7 @@ const CreateNewService = () => {
 
                 <label
                   htmlFor="file-upload"
-                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3 rounded transition"
+                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3 rounded "
                 >
                   Browse
                 </label>
@@ -189,7 +195,7 @@ const CreateNewService = () => {
               type="submit"
               className="cursor-pointer my-6 bg-[#0D47A1] text-lg font-semibold text-[#E3F2FD] w-full py-4 rounded-lg transition"
             >
-              Create Service
+             {isPending?" Creating...":" Create Service"}
             </button>
           </form>
         </div>
