@@ -291,7 +291,9 @@ const AddMediaToService = () => {
                     <div>
                       <h2 className="font-bold text-lg">{media?.title}</h2>
                       <h2 className="text-md">Path: {media?.file_path}</h2>
-                      <h2 className="text-md">Description: {media?.description}</h2>
+                      {media?.description && (
+                        <h2 className="text-md">Description: {media?.description}</h2>
+                      )}
                       <h2 className="text-md">
                         Added:{' '}
                         {media?.created_at
