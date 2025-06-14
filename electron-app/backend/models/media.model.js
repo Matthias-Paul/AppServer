@@ -37,7 +37,7 @@ Media.init({
   },
   price: {
     type: DataTypes.DECIMAL(8, 2),
-    allowNull: false
+    allowNull: false  
   }
 }, {
   sequelize,

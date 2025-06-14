@@ -44,10 +44,7 @@ const UserManagement = () => {
       `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=8`,
       {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        
       }
     )
     if (!res.ok) {

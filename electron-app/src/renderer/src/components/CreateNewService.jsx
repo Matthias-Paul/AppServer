@@ -80,7 +80,7 @@ const CreateNewService = () => {
   return (
     <>
       <div className="pt-7 mx-auto min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
-        <Link className="flex items-center font-semibold text-[18px]  " to="/admin/service">
+        <Link className="flex max-w-[160px] items-center font-semibold text-[18px]  " to="/admin/service">
           <div className="text-[20px] mr-1 ">
             {' '}
             <FaArrowLeft />
@@ -137,7 +137,7 @@ const CreateNewService = () => {
                 {' '}
                 Service Banner (Optional){' '}
               </label>
-              <div className="flex items-center gap-4 mt-1">
+              <div className="flex items-center gap-2 mt-1">
                 <input
                   id="file-upload"
                   type="file"
@@ -155,7 +155,7 @@ const CreateNewService = () => {
 
                 <label
                   htmlFor="file-upload"
-                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3 rounded "
+                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3 rounded-lg "
                 >
                   Browse
                 </label>

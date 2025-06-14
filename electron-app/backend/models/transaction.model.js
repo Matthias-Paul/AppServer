@@ -2,8 +2,8 @@
 'use strict';
 import { Sequelize, DataTypes, Model } from "sequelize";
 import { sequelize } from "../database/DB.config.js";
-import User from "./User.js";
-import Media from "./Media.js";
+import User from "./users.model.js";
+import Media from "./media.model.js";
 
 class Transaction extends Model {}
 
