@@ -44,7 +44,9 @@ const UserManagement = () => {
       `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=8`,
       {
         method: 'GET',
-        
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
       }
     )
     if (!res.ok) {
@@ -110,7 +112,7 @@ const UserManagement = () => {
             </button>
           </div>
         </div>
-        <div className="max-h-[400px] pb-20 overflow-y-auto  ">
+        <div className=" pb-10 ">
           <UsersTable isLoading={isLoading} users={users} />
 
           {hasNextPage && (

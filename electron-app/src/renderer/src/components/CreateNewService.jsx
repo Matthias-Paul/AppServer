@@ -26,7 +26,7 @@ const CreateNewService = () => {
     const res = await fetch(`${baseURL}/api/services`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${token}`
       },
       body: formData
     })
@@ -79,14 +79,14 @@ const CreateNewService = () => {
 
   return (
     <>
-      <div className="pt-7 mx-auto min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
-        <Link className="flex max-w-[160px] items-center font-semibold text-[18px]  " to="/admin/service">
-          <div className="text-[20px] mr-1 ">
-            {' '}
-            <FaArrowLeft />
-          </div>{' '}
-          Back to Services
-        </Link>
+      <div className="pt-7 mx-auto text-[#0D47A1] w-full pl-7 overflow-hidden">
+        <div className="flex items-center font-semibold text-[18px]  ">
+          <Link className="flex items-center  " to="/admin/service">
+            <FaArrowLeft className="text-[20px] flex mr-1" />
+            <h2>Back to Services</h2>
+          </Link>
+        </div>
+
         <h2 className=" mt-4 font-bold text-3xl lg:text-4xl text-center mb-5  uppercase ">
           Create New Services{' '}
         </h2>
@@ -195,7 +195,7 @@ const CreateNewService = () => {
               type="submit"
               className="cursor-pointer my-6 bg-[#0D47A1] text-lg font-semibold text-[#E3F2FD] w-full py-4 rounded-lg transition"
             >
-             {isPending?" Creating...":" Create Service"}
+              {isPending ? ' Creating...' : ' Create Service'}
             </button>
           </form>
         </div>

@@ -1,230 +1,243 @@
 import fs from 'fs'
 import path from 'path'
-import User from "../models/users.model.js";
-import { Op } from "sequelize";
-import Service from "../models/service.model.js";
-import Media from '../models/media.model.js';
-import ServiceMedia from '../models/service-media.model.js';
-import { validationResult, matchedData } from "express-validator"
-
+import User from '../models/users.model.js'
+import { Op } from 'sequelize'
+import Service from '../models/service.model.js'
+import Media from '../models/media.model.js'
+import ServiceMedia from '../models/service-media.model.js'
+import { v4 as uuidv4 } from 'uuid'
 
 export const getUsers = async (req, res) => {
   try {
-    if (!req.user || !req.user.id || req.user.role !== "admin") {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Unauthorized access",
-      });
+        message: 'Unauthorized access'
+      })
     }
 
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-    const { search, filter } = req.query;
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const offset = (page - 1) * limit
+    const { search, filter } = req.query
 
-    let whereClause = {};
+    let whereClause = {}
 
-    if (filter && filter.toLowerCase() !== "all") {
-      whereClause.role = filter;
+    if (filter && filter.toLowerCase() !== 'all') {
+      whereClause.role = filter
     }
 
-    
     if (search) {
-    whereClause[Op.or] = [
+      whereClause[Op.or] = [
         { username: { [Op.like]: `%${search}%` } },
         { email: { [Op.like]: `%${search}%` } },
-        { role: { [Op.like]: `%${search}%` } },
-    ];
+        { role: { [Op.like]: `%${search}%` } }
+      ]
     }
 
     const { count, rows: users } = await User.findAndCountAll({
       where: whereClause,
       limit,
       offset,
-      order: [["created_at", "DESC"]],
-      attributes: { exclude: ['password_hash'] },
-    });
+      order: [['created_at', 'DESC']],
+      attributes: { exclude: ['password_hash'] }
+    })
 
-    const hasNextPage = page * limit < count;
+    const hasNextPage = page * limit < count
 
     return res.status(200).json({
       success: true,
       users,
-      hasNextPage,
-    });
-
+      hasNextPage
+    })
   } catch (error) {
-    console.error("GetUsers error:", error.message);
+    console.error('GetUsers error:', error.message)
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
-    });
+      message: 'Internal Server Error'
+    })
   }
-};
+}
 
-
-
-export const createService = async(req, res)=>{
-      
-  
+export const createService = async (req, res) => {
   try {
-        const { name, theme, description, isActive } = req.body
-        if(!name){
-          return res.status(400).json({
-            success: false,
-            message: "Name is required",
-          }); 
-        }
-// Handle file upload
-  let bannerPath = null;
-    if (req.file) {
-      bannerPath = `/fileStorage/images/${req.file.filename}`;
+    const { name, theme, description, isActive } = req.body
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name is required'
+      })
     }
-     console.log(bannerPath)
+    // Handle file upload
+    let bannerPath = null
+    if (req.file) {
+      bannerPath = `/fileStorage/images/${req.file.filename}`
+    }
+    console.log(bannerPath)
     const service = await Service.create({
       name,
       description,
       theme,
       is_active: isActive === 'true',
-      banner_image: bannerPath,
-    });
-
-
-    
-    return res.status(201).json({
-      success: true,
-      id:service.id,
-      message: 'Service created successfully',
-      service,
+      banner_image: bannerPath
     })
 
-
+    return res.status(201).json({
+      success: true,
+      id: service.id,
+      message: 'Service created successfully',
+      service
+    })
   } catch (error) {
-   console.error("GetUsers error:", error.message);
+    console.error('GetUsers error:', error.message)
 
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
-    }); 
+      message: 'Internal Server Error'
+    })
   }
 }
 
-export const getServices =async(req, res)=>{
-
+export const getServices = async (req, res) => {
   try {
-
     const { id } = req.params
 
     const serviceDetails = await Service.findByPk(id)
-    if(!serviceDetails){
+    if (!serviceDetails) {
       return res.status(404).json({
-      success: false,
-      message: "Service not found",
-    }); 
+        success: false,
+        message: 'Service not found'
+      })
     }
 
     return res.status(200).json({
       success: true,
       serviceDetails
-    }); 
-  
+    })
   } catch (error) {
-    console.error("serviceDetails error:", error.message);
+    console.error('serviceDetails error:', error.message)
     return res.status(500).json({
-          success: false,
-          message: "Internal Server Error",
-        }); 
-    
+      success: false,
+      message: 'Internal Server Error'
+    })
   }
 }
 
-
-
-
-export const addMedia = async(req, res)=>{
-
-
+export const addMedia = async (req, res) => {
   try {
-      if (!req.user || !req.user.id || req.user.role !== "admin") {
-          return res.status(403).json({
-            success: false,
-            message: "Unauthorized access",
-          });
-        }
-
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' })
+    if (!req.user || typeof req.user !== 'object' || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
     }
 
-    const { id } = req.params;
-    const { title, description, price, file_type } = req.body;
+    const { id } = req.params
+    const {
+      title,
+      description,
+      price,
+      file_type,
+      file_full_path,
+      is_upload,
+      file_name,
+      file_size
+    } = req.body
 
-    const filePath = `/fileStorage/${file_type}s/${req.file.filename}`
-    console.log(filePath)
-    const fileSizeInMB = (req.file.size / (1024 * 1024)).toFixed(2);
+    let finalFilePath = ''
+    let finalFileSize = 0
+
+    // CASE 1: is_upload is true → from Electron
+    if (is_upload === 'true') {
+      const ext = path.extname(file_full_path).toLowerCase()
+      const mediaType = file_type + 's' 
+
+      const uniqueFileName = `${uuidv4()}${ext}`
+      const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
+      const destinationPath = path.join(destinationFolder, uniqueFileName)
+
+      if (!fs.existsSync(destinationFolder)) {
+        fs.mkdirSync(destinationFolder, { recursive: true })
+      }
+
+      fs.copyFileSync(file_full_path, destinationPath)
+
+      finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
+      finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
+    }
+
+    // CASE 2: is_upload is true and req.file is present(not electron api )
+    else if (req.file) {
+      const mediaType = file_type + 's'
+      finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
+      finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+    } else if (is_upload === 'false') {
+          // CASE 3: is_upload is false 
+
+      finalFilePath = file_full_path
+      finalFileSize = file_size || 0
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'No file provided.'
+      })
+    }
 
     const media = await Media.create({
       title,
       description,
-      file_path: filePath,
-      file_type: file_type,
-      file_size: fileSizeInMB,
+      file_full_path,
+      file_path: finalFilePath,
+      file_type,
+      file_size: finalFileSize || file_size,
       price
     })
 
     await ServiceMedia.create({
       service_id: id,
-      media_id: media.id,
-    });
+      media_id: media.id
+    })
 
-    res.status(201).json({ success: true, media });
-
-
-    
+    res.status(201).json({ success: true, media })
   } catch (error) {
-    console.error("add service error:", error.message);
+    console.error('addMedia error:', error)
     return res.status(500).json({
-          success: false,
-          message: "Internal Server Error",
-    }); 
+      success: false,
+      message: 'Internal Server Error'
+    })
   }
 }
 
-
-
-
 export const getServiceMedia = async (req, res) => {
   try {
-    const { serviceId } = req.params;
+    const { serviceId } = req.params
 
     const service = await Service.findByPk(serviceId, {
       include: [
         {
           model: Media,
-          as: 'media_files', 
-        },
-      ],
-    });
+          as: 'media_files'
+        }
+      ]
+    })
 
     if (!service) {
       return res.status(404).json({
         success: false,
-        message: "Service not found",
-      });
+        message: 'Service not found'
+      })
     }
 
     return res.status(200).json({
       success: true,
-      media: service.media_files,
-    });
+      media: service.media_files
+    })
   } catch (error) {
-    console.error("getServiceMedia error:", error.message);
+    console.error('getServiceMedia error:', error.message)
     return res.status(500).json({
       success: false,
-      message: "Internal Server Error",
-    });
+      message: 'Internal Server Error'
+    })
   }
-};
-
-
+}

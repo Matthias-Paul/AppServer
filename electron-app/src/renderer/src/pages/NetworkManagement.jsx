@@ -149,7 +149,7 @@ const NetworkManagement = () => {
               <QRCode ref={qrRef} fgColor="#0D47A1" size={200} value={qrValue} />
               <h2 className="text-center font-bold text-[20px] mt-[10px]"> QR Code</h2>
             </div>
-            <p className="my-7 font-semibold ">Scan this code with the mobile app to connect</p>
+            <p className="my-7 text-[16px] 2xl:text-[24px] font-semibold ">Scan this code with the mobile app to connect</p>
             <div className="flex items-center gap-x-5 w-full justify-between">
               <button
                 onClick={downloadQR}

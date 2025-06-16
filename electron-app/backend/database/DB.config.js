@@ -8,7 +8,23 @@ export const sequelize = new Sequelize({
   dialect: 'sqlite',
   storage: join(__dirname, '..', 'data-storage', 'db.sqlite'),
   logging: false
+
+
 })
+
+
+// const deleteTable = async () => {
+//   try {
+//     await sequelize.getQueryInterface().dropTable('media')
+//     console.log('MediaFiles table deleted successfully.')
+//   } catch (err) {
+//     console.error('Failed to delete table:', err)
+//   }
+// }
+
+// deleteTable()
+
+
 
 export const testDbConnection = async () => {
   try {

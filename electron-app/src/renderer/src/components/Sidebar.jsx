@@ -15,7 +15,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`min-h-full transition-all duration-300 ${isCollapsed ? 'w-[80px]   ' : ' w-[250px] mr-4  xl:w-[280px]  '} bg-[#0D47A1] text-[#E3F2FD] rounded-2xl mx-4 mt-4 overflow-y-auto`}
+      className={`h-full transition-all duration-300 ${isCollapsed ? 'w-[80px]   ' : ' w-[250px] mr-4  xl:w-[280px]  '} bg-[#0D47A1] text-[#E3F2FD] rounded-2xl mx-4 mt-4 overflow-y-auto`}
     >
       <div className="flex justify-between items-center px-4 py-6">
         {!isCollapsed && <span className="text-xl pl-[9px] font-semibold">Church Media</span>}

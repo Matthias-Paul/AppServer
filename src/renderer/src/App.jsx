@@ -1,0 +1,51 @@
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
+import ScrollToTop from './components/ScrollToTop'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import AdminLayout from './layouts/AdminLayout'
+import AdminHomePage from './pages/AdminHomePage'
+import UserManagement from './pages/UserManagement'
+import ProtectedRoute from './components/ProtectedRoute'
+import NetworkManagement from './pages/NetworkManagement'
+import SalesAnalytics from './pages/SalesAnalytics'
+import MediaManagement from './pages/MediaManagement'
+import ServiceManagement from './pages/ServiceManagement'
+import CreditManagement from './pages/CreditManagement'
+import CreateNewService from './components/CreateNewService'
+import AddMediaToService from './components/AddMediaToService'
+
+
+function App() {
+  return (
+    <>
+      <Router>
+        <ScrollToTop />
+        <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+     
+          {/* Admin routes (protected) */}
+          <Route element={<ProtectedRoute role="admin" />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminHomePage />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="network" element={<NetworkManagement />} />
+              <Route path="sales" element={<SalesAnalytics />} />
+              <Route path="media" element={<MediaManagement />}/>
+              <Route path="service" element={<ServiceManagement />}/>
+              <Route path="credit" element={<CreditManagement />}/>
+              <Route path="service/newService" element={<CreateNewService />}/>
+              <Route path="service/:id/addMedia" element={<AddMediaToService />}/>
+
+            </Route>
+          </Route>
+        </Routes>
+
+        <Toaster position="top-right" />
+      </Router>
+    </>
+  );
+}
+
+export default App;

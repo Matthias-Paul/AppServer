@@ -74,7 +74,7 @@ const AdminHomePage = () => {
 
   return (
     <>
-      <div className=" min-h-[400px] w-full pl-7 overflow-hidden ">
+      <div className=" w-full pl-7 overflow-hidden ">
         <div className="flex justify-between items-center  ">
           <div className="flex items-center">
             <div className="flex flex-col">
@@ -111,7 +111,7 @@ const AdminHomePage = () => {
         </div>
 
           <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]    "  > Recents Activities</h2>
-          <div className="max-h-[400px] pb-20 mt-4 overflow-y-auto bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
+          <div className="pb-10 mt-4 bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
           <DashboardTable activities={activities}  /> 
           {/* {hasNextPage && (
             <div className="flex justify-center items-center">

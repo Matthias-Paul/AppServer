@@ -97,12 +97,12 @@ const SalesAnalytics = () => {
         </div>
 
         <div className="border flex-grow border-[#0D47A1] rounded-lg p-4 ">
-          <h2 className="text-[#0D47A1] font-semibold text-2xl"> Top Services </h2>
+          <h2 className="text-[#0D47A1] font-semibold text-4xl"> Top Services </h2>
           <div className="w-full">
             {topServices.length > 0 ? (
               <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
                 <table className="text-left min-w-full mx-auto text-[#0D47A1]">
-                  <thead className="font-semibold text-[20px] border-b-[2px] border-[#0D47A1]">
+                  <thead className="font-semibold text-[25px] border-b-[2px] border-[#0D47A1]">
                     <tr>
                       <th className="py-2 pr-4 sm:py-3">Service</th>
                       <th className="py-2 px-4 sm:py-3">Revenue</th>
@@ -112,14 +112,14 @@ const SalesAnalytics = () => {
                     {topServices?.map((service, index) => (
                       <tr
                         key={service?.id}
-                        className={`border-b-[2px] border-[#0D47A1] font-medium text-[20px] cursor-pointer ${
+                        className={`border-b-[2px] border-[#0D47A1] font-medium  cursor-pointer ${
                           index === topServices?.length - 1 ? 'border-b-0' : ''
                         }`}
                       >
-                        <td className="py-2 pr-4 sm:py-4 text-[16px] font-medium">
+                        <td className="py-2 pr-4 sm:py-4 text-[20px] font-medium">
                           {service?.name}
                         </td>
-                        <td className="py-2 px-4 sm:py-4 text-[16px] font-medium">
+                        <td className="py-2 px-4 sm:py-4 text-[20px] font-medium">
                           {service?.revenue}
                         </td>
                       </tr>

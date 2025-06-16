@@ -135,7 +135,7 @@ const MediaManagement = () => {
             Documents{' '}
           </button>
         </div>
-        <div className="max-h-[400px] pb-20 overflow-y-auto " >
+        <div className="pb-10 " >
           {medias.length > 1 ? (
             <div className="grid grid-cols-2 lg:grid-cols-3  gap-x-5 gap-y-5">
               {medias.map((media) => (
