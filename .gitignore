@@ -12,4 +12,4 @@ out
 .eslintcache
 *.log*
 /build
-src/renderer/src/assets/config.json
+/src/renderer/src/assets/config.json
