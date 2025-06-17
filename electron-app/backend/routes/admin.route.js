@@ -7,16 +7,27 @@ import {
   createService,
   getServices,
   addMedia,
-  getServiceMedia
+  getServiceMedia,
+  getAllServices,
+  createMedia,
+  getAllMedia,
+  deleteMedia,
+  addUser
 } from '../controllers/admin.js'
-import {} from '../middlewares/express-validation.js'
+import { registerValidation } from '../middlewares/express-validation.js'
 
 const router = express.Router()
 
 router.get('/users', verifyUser, getUsers)
+router.get('/services', getAllServices)
+router.post('/addUser', verifyUser, registerValidation, addUser)
+
 router.post('/services', verifyUser, upload.single('banner'), createService)
+router.post('/media', verifyUser, electronUpload.single('file'), createMedia)
+router.get('/media', getAllMedia)
 router.post('/services/:id/addMedia', verifyUser, electronUpload.single('file'), addMedia)
 router.get('/services/:id', getServices)
 router.get('/services/:serviceId/media', getServiceMedia)
+router.delete('/media/:id', verifyUser, deleteMedia)
 
 export default router
