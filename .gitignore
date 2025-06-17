@@ -1,8 +1,15 @@
 node_modules
 backend/node_modules
+backend/fileStorage/documents
+backend/fileStorage/images
+backend/fileStorage/videos
+backend/fileStorage/audio
 dist
 out
-env
+/.env
+.env
 .DS_Store
 .eslintcache
 *.log*
+/build
+/src/renderer/src/assets/config.json

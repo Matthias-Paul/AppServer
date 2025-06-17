@@ -1,7 +1,6 @@
 import { BsCircleFill } from 'react-icons/bs'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
-import getBackendURL from '../components/GetBackendURL.jsx'
 import toast from 'react-hot-toast'
 
 const NetworkManagement = () => {
@@ -41,6 +40,22 @@ const NetworkManagement = () => {
 
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData)
   }
+
+  useEffect(() => {
+    let cachedConfig = {}
+
+    const getCache = async () => {
+      try {
+        const response = await fetch('/src/assets/config.json')
+        cachedConfig = await response.json()
+        setServerIp(cachedConfig.backendIP)
+        setServerPort(cachedConfig.backendPort)
+      } catch (error) {
+        console.log('Could not load config.json:', error)
+      }
+    }
+    getCache()
+  }, [])
 
   const printQR = () => {
     const svg = qrRef.current
