@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import fs from 'node:fs'
+import { Blob } from 'node:buffer'
 
 // Custom APIs for renderer
 const api = {}
@@ -21,20 +23,41 @@ if (process.contextIsolated) {
 
 
 
-
 contextBridge.exposeInMainWorld('electronAPI', {
-  getConfig: async () => {
+  selectMediaFile: () => ipcRenderer.invoke('select-media-file'),
+
+  getFileBuffer: async (filePath) => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, (err, data) => {
+        if (err) return reject(err)
+        resolve(data)
+      })
+    })
+  },
+
+  readFileAsBlob: async (filePath) => {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, (err, data) => {
+        if (err) return reject(err)
+        resolve({
+          buffer: data.buffer,
+          mimeType: '',
+        })
+      })
+    })
+  },
+
+  getFileStats: (filePath) => {
     try {
-      // fetch from backend
-      const response = await fetch('http://localhost:5000/api/config')
-      if (response.ok) {
-        return await response.json()
+      const stats = fs.statSync(filePath)
+      return {
+        size: stats.size,
+        createdAt: stats.birthtime,
+        modifiedAt: stats.mtime,
       }
-      return null
     } catch (error) {
-      console.error('Error fetching config:', error)
+      console.error('Error getting file stats:', error)
       return null
     }
-  },
-  selectMediaFile: () => ipcRenderer.invoke('select-media-file')
-});
+  }
+})

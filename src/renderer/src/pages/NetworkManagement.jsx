@@ -124,7 +124,7 @@ const NetworkManagement = () => {
             <h2 className="my-4 font-bold text-[25px] "> Server Connection Details </h2>
             <div className="flex items-center justify-start font-semibold w-full mb-4 bg-[#F8F9FA] border border-[#E1E7F1] px-5 py-2 text-[20px] rounded">
               <BsCircleFill className="text-[#0D47A1] mr-2  w-5 h-5" /> Server Running - PORT{' '}
-              {`${import.meta.env.VITE_BACKEND_PORT} `}
+              {`${backendPort} `}
             </div>
             <h2 className=" font-bold text-[20px] "> Server IP Address </h2>
             <input

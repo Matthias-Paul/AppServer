@@ -3,41 +3,36 @@ import adminPic from '../assets/adminPics.png'
 import DashboardTable from '../components/DashboardTable'
 
 const AdminHomePage = () => {
-
   const activities = [
     {
-      id:"1333223",
-      time:"23:12",
-      email:"test@gmail.com",
-      action:"media download",
-      details:"Sunday worship audio -50 credits"
+      id: '1333223',
+      time: '23:12',
+      email: 'test@gmail.com',
+      action: 'media download',
+      details: 'Sunday worship audio -50 credits'
     },
     {
-      id:"1223e33",
-      time:"23:12",
-      email:"test@gmail.com",
-      action:"media download",
-      details:"Sunday worship audio -50 credits"
+      id: '1223e33',
+      time: '23:12',
+      email: 'test@gmail.com',
+      action: 'media download',
+      details: 'Sunday worship audio -50 credits'
     },
     {
-      id:"1w33223",
-      time:"23:12",
-      email:"test@gmail.com",
-      action:"media download",
-      details:"Sunday worship audio -50 credits"
+      id: '1w33223',
+      time: '23:12',
+      email: 'test@gmail.com',
+      action: 'media download',
+      details: 'Sunday worship audio -50 credits'
     },
     {
-      id:"1223sw",
-      time:"23:12",
-      email:"test@gmail.com",
-      action:"media download",
-      details:"Sunday worship audio -50 credits"
+      id: '1223sw',
+      time: '23:12',
+      email: 'test@gmail.com',
+      action: 'media download',
+      details: 'Sunday worship audio -50 credits'
     }
   ]
-
-
-
-
 
   const [currentDate, setCurrentDate] = useState(() =>
     new Date().toLocaleDateString('en-US', {
@@ -110,9 +105,9 @@ const AdminHomePage = () => {
           </div>
         </div>
 
-          <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]    "  > Recents Activities</h2>
-          <div className="pb-10 mt-4 bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
-          <DashboardTable activities={activities}  /> 
+        <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]    "> Recents Activities</h2>
+        <div className="pb-10 mt-4 bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
+          <DashboardTable activities={activities} />
           {/* {hasNextPage && (
             <div className="flex justify-center items-center">
               <button

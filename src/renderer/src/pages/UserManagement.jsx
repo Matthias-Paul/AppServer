@@ -1,6 +1,6 @@
 import SearchBar from '../components/SearchBar'
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import UsersTable from '../components/UsersTable'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -41,12 +41,12 @@ const UserManagement = () => {
     const baseURL = await getBackendURL()
     console.log('base url', baseURL)
     const res = await fetch(
-      `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=8`,
+      `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=16`,
       {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
-        },
+        }
       }
     )
     if (!res.ok) {
@@ -71,9 +71,12 @@ const UserManagement = () => {
         <div>
           <div className="flex justify-between items-center  ">
             <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> User Management </h2>
-            <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
-              Add new user{' '}
-            </button>
+
+            <Link to="addUser" >
+              <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
+                Add new user{' '}
+              </button>
+            </Link>
           </div>
           <SearchBar placeholder={'Search users by name, email, or role...'} />
 
@@ -95,9 +98,9 @@ const UserManagement = () => {
               Admins{' '}
             </button>
             <button
-              onClick={() => handleFilterChange('sales-rep')}
+              onClick={() => handleFilterChange('sales_rep')}
               className={`font-bold border border-[#0D47A1] text-lg lg:text-xl cursor-pointer py-2 px-4 rounded-lg text-center
-           ${filter === 'sales-rep' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
+           ${filter === 'sales_rep' ? 'bg-[#0D47A1] text-[#E3F2FD]' : 'bg-[#E3F2FD] text-[#0D47A1]'}`}
             >
               {' '}
               Sales Reps{' '}
@@ -118,7 +121,7 @@ const UserManagement = () => {
           {hasNextPage && (
             <div className="flex justify-center items-center">
               <button
-                className="rounded py-1 px-4 bg-[#0D47A1] my-4 text-[#E3F2FD] cursor-pointer"
+                className="rounded py-2 px-6 bg-[#0D47A1] my-4 text-2xl text-[#E3F2FD] cursor-pointer"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
               >
