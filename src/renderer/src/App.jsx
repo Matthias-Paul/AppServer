@@ -14,7 +14,8 @@ import ServiceManagement from './pages/ServiceManagement'
 import CreditManagement from './pages/CreditManagement'
 import CreateNewService from './components/CreateNewService'
 import AddMediaToService from './components/AddMediaToService'
-
+import UploadMedia from './components/UploadMedia'
+import AddUser from './components/AddUser'
 
 function App() {
   return (
@@ -22,22 +23,23 @@ function App() {
       <Router>
         <ScrollToTop />
         <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-     
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
           {/* Admin routes (protected) */}
           <Route element={<ProtectedRoute role="admin" />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminHomePage />} />
               <Route path="users" element={<UserManagement />} />
+              <Route path="users/addUser" element={<AddUser />} />
               <Route path="network" element={<NetworkManagement />} />
               <Route path="sales" element={<SalesAnalytics />} />
-              <Route path="media" element={<MediaManagement />}/>
-              <Route path="service" element={<ServiceManagement />}/>
-              <Route path="credit" element={<CreditManagement />}/>
-              <Route path="service/newService" element={<CreateNewService />}/>
-              <Route path="service/:id/addMedia" element={<AddMediaToService />}/>
-
+              <Route path="media" element={<MediaManagement />} />
+              <Route path="media/upload" element={<UploadMedia />} />
+              <Route path="service" element={<ServiceManagement />} />
+              <Route path="credit" element={<CreditManagement />} />
+              <Route path="service/newService" element={<CreateNewService />} />
+              <Route path="service/:id/addMedia" element={<AddMediaToService />} />
             </Route>
           </Route>
         </Routes>
@@ -45,7 +47,7 @@ function App() {
         <Toaster position="top-right" />
       </Router>
     </>
-  );
+  )
 }
 
-export default App;
+export default App

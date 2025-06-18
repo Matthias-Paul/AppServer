@@ -3,7 +3,7 @@ backend/node_modules
 backend/fileStorage/documents
 backend/fileStorage/images
 backend/fileStorage/videos
-backend/fileStorage/audio
+backend/fileStorage/audios
 dist
 out
 /.env

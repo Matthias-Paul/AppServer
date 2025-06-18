@@ -58,18 +58,18 @@ const Login = () => {
 
   return (
     <>
-      <div className="py-[100px]  max-w-[1400px] relative mx-auto  flex w-full ">
+      <div className="pt-[100px] mb-4  relative mx-auto  flex w-full ">
         <div className=" flex w-full px-[12px] justify-center items-center ">
           <form
             onSubmit={handleFormSubmit}
-            className="w-full   max-w-[700px] px-20 rounded-lg pb-5 bg-white "
+            className="w-full text-2xl  max-w-[1000px] px-20 rounded-lg pb-5 bg-white "
           >
-            <h2 className=" text-2xl text-[#0D47A1]  font-bold text-center mb-2 "> Hey admin! </h2>
+            <h2 className=" text-3xl text-[#0D47A1]  font-bold text-center mb-2 "> Hey admin! </h2>
             <p className=" text-center  text-[#0D47A1]  mb-4 ">
               Enter your username and password to login
             </p>
             <div className="mb-6">
-              <label id="email" className="block text-[#0D47A1]  text-sm font-semibold mb-1 ">
+              <label id="email" className="block text-[#0D47A1]   font-semibold mb-1 ">
                 {' '}
                 Email{' '}
               </label>
@@ -84,7 +84,7 @@ const Login = () => {
             </div>
 
             <div className="mb-3">
-              <label id="password" className="block text-[#0D47A1]  text-sm font-semibold mb-1 ">
+              <label id="password" className="block text-[#0D47A1]   font-semibold mb-1 ">
                 {' '}
                 Password{' '}
               </label>
@@ -101,7 +101,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loginMutation.isPending}
-              className={`w-full text-lg mb-[-15px] mt-6 rounded-lg font-semibold p-3 
+              className={`w-full text-xl mb-[-15px] mt-6 rounded-lg font-semibold p-4
                 ${loginMutation.isPending ? 'bg-[#0D47A1]  cursor-not-allowed text-white ' : 'bg-[#0D47A1]  cursor-pointer text-[#E3F2FD] '}`}
             >
               {loginMutation.isPending ? 'Signing In...' : 'Sign In'}

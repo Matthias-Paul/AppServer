@@ -1,26 +1,21 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaArrowLeft } from 'react-icons/fa'
-import { useQuery } from '@tanstack/react-query'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import getBackendURL from './GetBackendURL'
-import { FaFileAudio, FaFileVideo, FaFileImage, FaFileAlt } from 'react-icons/fa'
 import toast from 'react-hot-toast'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const AddMediaToService = () => {
-  const { id } = useParams()
+
+
+const UploadMedia = () => {
   const navigate = useNavigate()
   const [isUploadFile, setIsUploadFile] = useState(true)
 
-  const [serviceDetails, setServiceDetails] = useState(null)
-  const [mediaCount, setMediaCount] = useState(0)
   const [mediaType, setMediaType] = useState('image')
   const [fileName, setFileName] = useState('')
   const [description, setDescription] = useState('')
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
-  const queryClient = useQueryClient()
   const [filePath, setFilePath] = useState('')
 
   const handleBrowse = async () => {
@@ -56,35 +51,11 @@ const AddMediaToService = () => {
   console.log('Selected file:', filePath)
   console.log('Media type:', mediaType)
 
-  const fetchServiceDetails = async () => {
-    const baseURL = await getBackendURL()
-    console.log('base url', baseURL)
-    const res = await fetch(`${baseURL}/api/services/${id}`, {
-      method: 'GET'
-    })
-    if (!res.ok) {
-      throw new Error('Failed to fetch service details')
-    }
-    return res.json()
-  }
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['serviceDetails', id],
-    queryFn: fetchServiceDetails
-  })
-
-  useEffect(() => {
-    if (data && data.serviceDetails) {
-      setServiceDetails(data.serviceDetails)
-      console.log('serviceDetails:', data.serviceDetails)
-    }
-  }, [data])
-
   const uploadMedia = async (formData) => {
     const token = localStorage.getItem('token')
     const baseURL = await getBackendURL()
 
-    const response = await fetch(`${baseURL}/api/services/${id}/addMedia`, {
+    const response = await fetch(`${baseURL}/api/media`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`
@@ -115,13 +86,13 @@ const AddMediaToService = () => {
       toast.success('Upload successful!')
       console.log('Upload result:', data)
 
-      queryClient.invalidateQueries(['serviceDetails', 'mediaCount', id])
-
       setTitle('')
       setPrice('')
       setDescription('')
       setFileName('')
       setFilePath('')
+      setTimeout(() => navigate('/admin/media'), 1000)
+
     },
     onError: (error) => {
       toast.error(error.message || 'Error while uploading')
@@ -166,52 +137,21 @@ const AddMediaToService = () => {
     mutation.mutate(formData)
   }
 
-  const token = localStorage.getItem('token')
-  const fetchMedia = async () => {
-    const baseURL = await getBackendURL()
-    console.log('base url', baseURL)
-    const res = await fetch(`${baseURL}/api/services/${id}/media`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-    if (!res.ok) {
-      throw new Error('Failed to fetch media')
-    }
-    return res.json()
-  }
-
-  const { data: mediaData, isLoading: isMediaLoading } = useQuery({
-    queryKey: ['medias', id],
-    queryFn: fetchMedia
-  })
-
-  useEffect(() => {
-    if (mediaData && Array.isArray(mediaData.media)) {
-      setMediaCount(mediaData.media.length)
-      console.log('Fetched media data:', mediaData)
-    }
-  }, [mediaData, id])
-
   return (
     <>
-      <div className="pt-6  text-[#0D47A1] w-full pl-7 overflow-hidden">
+      <div className="pt-7 mx-auto text-[#0D47A1] w-full pl-7 overflow-hidden">
         <div className="flex items-center font-semibold text-[18px]  ">
-          <Link className="flex items-center  " to="/admin/service">
+          <Link className="flex items-center  " to="/admin/media">
             <FaArrowLeft className="text-[20px] flex mr-1" />
-            <h2>Back to Services</h2>
+            <h2>Back to Media</h2>
           </Link>
         </div>
 
-        <h2 className=" mt-4 font-bold text-3xl lg:text-4xl uppercase ">
-          {' '}
-          {serviceDetails?.name}{' '}
+        <h2 className=" mt-4 font-bold text-3xl lg:text-4xl text-center mb-5  uppercase ">
+          Upload A New Media{' '}
         </h2>
-        <h3 className="text-[20px] mt-2  ">Media Count: {mediaCount} </h3>
-        <div className="w-full flex gap-4 pb-5  mt-2  items-start justify-center ">
-          <div className="shadow-md p-5 rounded-lg   w-3/5 ">
-            <h2 className="font-semibold text-[20px] ">Add Media</h2>
+        <div className="  max-w-[1500px] mx-auto">
+          <div className="shadow-md p-5 rounded-lg   w-full ">
             <form onSubmit={handleSubmit}>
               <div className="mb-6   mt-4 ">
                 <label className="block text-[#0D47A1]  text-lg  font-semibold mb-1 ">
@@ -314,44 +254,9 @@ const AddMediaToService = () => {
                   mutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {mutation.isPending ? 'Uploading...' : 'Add'}
+                {mutation.isPending ? 'Uploading...' : 'Upload'}
               </button>
             </form>
-          </div>
-          <div className="shadow-md rounded-lg pb-5  h-full p-5 w-2/5">
-            <h2 className="font-semibold text-[20px]">Media Files</h2>
-
-            {isMediaLoading ? (
-              <div className="text-center mt-4">Loading...</div>
-            ) : mediaData?.media?.length >= 1 ? (
-              mediaData.media.map((media) => (
-                <div className="mt-4 border-b-[1px] border-[#0D47A1] gap-y-2" key={media?.id}>
-                  <div className="flex gap-x-2">
-                    <div>
-                      {media.file_type === 'audio' && <FaFileAudio className="w-12 h-12" />}
-                      {media.file_type === 'video' && <FaFileVideo className="w-12 h-12" />}
-                      {media.file_type === 'image' && <FaFileImage className="w-12 h-12" />}
-                      {media.file_type === 'document' && <FaFileAlt className="w-12 h-12" />}
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-lg">{media?.title}</h2>
-                      <h2 className="text-md">Path: {media?.file_path}</h2>
-                      {media?.description && (
-                        <h2 className="text-md">Description: {media?.description}</h2>
-                      )}
-                      <h2 className="text-md">
-                        Added:{' '}
-                        {media?.created_at
-                          ? new Date(media.created_at).toISOString().split('T')[0]
-                          : 'N/A'}
-                      </h2>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center mt-4">You have not added any media yet!</div>
-            )}
           </div>
         </div>
       </div>
@@ -359,4 +264,4 @@ const AddMediaToService = () => {
   )
 }
 
-export default AddMediaToService
+export default UploadMedia

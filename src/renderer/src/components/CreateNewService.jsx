@@ -90,22 +90,22 @@ const CreateNewService = () => {
         <h2 className=" mt-4 font-bold text-3xl lg:text-4xl text-center mb-5  uppercase ">
           Create New Services{' '}
         </h2>
-        <div className="  max-w-[700px] mx-auto">
+        <div className="  max-w-[1500px] mx-auto">
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label className="block text-[#0D47A1]  text-lg font-semibold mb-1 "> Name </label>
+              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 "> Name </label>
               <input
                 placeholder="Enter service name"
                 value={name}
                 required
                 onChange={(e) => setName(e.target.value)}
-                className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                className="border focus:outline-none px-2  py-3 xl:text-2xl   w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                 type="text"
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-[#0D47A1]  text-lg font-semibold mb-1 ">
+              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 ">
                 {' '}
                 Description (Optional){' '}
               </label>
@@ -113,13 +113,13 @@ const CreateNewService = () => {
                 placeholder="Enter service description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                className="border focus:outline-none px-2  py-3 xl:text-2xl   w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                 type="text"
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-[#0D47A1]  text-lg font-semibold mb-1 ">
+              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 ">
                 {' '}
                 Theme (Optional){' '}
               </label>
@@ -127,13 +127,13 @@ const CreateNewService = () => {
                 placeholder="Enter service theme"
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
-                className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                className="border focus:outline-none px-2  py-3 xl:text-2xl  w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                 type="text"
               />
             </div>
 
             <div className="mb-6">
-              <label className="block text-[#0D47A1]  text-lg font-semibold mb-1 ">
+              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 ">
                 {' '}
                 Service Banner (Optional){' '}
               </label>
@@ -150,12 +150,12 @@ const CreateNewService = () => {
                   value={fileName}
                   readOnly
                   placeholder="No file chosen"
-                  className="border border-[#0D47A1] rounded-lg px-2 py-3 w-full text-lg focus:outline-none "
+                  className="border border-[#0D47A1] rounded-lg xl:text-2xl  px-2 py-3  w-full text-lg xl:text-2xl focus:outline-none "
                 />
 
                 <label
                   htmlFor="file-upload"
-                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3 rounded-lg "
+                  className="cursor-pointer bg-[#0D47A1] text-[#E3F2FD]  px-6 py-3  rounded-lg "
                 >
                   Browse
                 </label>
@@ -163,7 +163,7 @@ const CreateNewService = () => {
             </div>
 
             <div className="mt-6">
-              <label className="block text-lg font-medium text-[#0D47A1]  mb-2">Is Active</label>
+              <label className="block text-lg xl:text-2xl font-medium text-[#0D47A1]  mb-2">Is Active</label>
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2">
                   <input
@@ -174,7 +174,7 @@ const CreateNewService = () => {
                     onChange={() => setIsActive(true)}
                     className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
                   />
-                  <span className="text-md">Yes</span>
+                  <span className="text-md  xl:text-2xl ">Yes</span>
                 </label>
 
                 <label className="flex items-center gap-2">
@@ -186,14 +186,14 @@ const CreateNewService = () => {
                     onChange={() => setIsActive(false)}
                     className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
                   />
-                  <span className="text-md">No</span>
+                  <span className="text-md xl:text-2xl ">No</span>
                 </label>
               </div>
             </div>
 
             <button
               type="submit"
-              className="cursor-pointer my-6 bg-[#0D47A1] text-lg font-semibold text-[#E3F2FD] w-full py-4 rounded-lg transition"
+              className="cursor-pointer my-6 bg-[#0D47A1] text-lg xl:text-2xl font-semibold text-[#E3F2FD] w-full py-4 rounded-lg transition"
             >
               {isPending ? ' Creating...' : ' Create Service'}
             </button>
