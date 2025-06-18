@@ -5,7 +5,7 @@ import getBackendURL from '../components/GetBackendURL.jsx'
 import toast from 'react-hot-toast'
 import { FaArrowLeft } from 'react-icons/fa'
 
-const Register = () => {
+const AddUser = () => {
   const navigate = useNavigate()
 
   const [username, setUsername] = useState('')
@@ -43,7 +43,7 @@ const Register = () => {
       return data
     },
     onSuccess: (data) => {
-      toast.success('Add new user successful!')
+      toast.success(data.message)
       console.log('login user:', data.user)
       setUsername('')
       setEmail('')
@@ -157,4 +157,4 @@ const Register = () => {
   )
 }
 
-export default Register
+export default AddUser

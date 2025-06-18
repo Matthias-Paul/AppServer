@@ -10,6 +10,9 @@ import { validationResult, matchedData } from 'express-validator'
 import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+
+
+
 export const getUsers = async (req, res) => {
   try {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
@@ -534,5 +537,178 @@ export const addUser = async (req, res) => {
       success: false,
       message: 'Internal Server Error'
     })
+  }
+}
+
+export const getMedia = async(req, res)=>{
+
+  
+
+
+try{
+
+  const { id } = req.params
+
+
+  const media = await Media.findByPk(id)
+  if(!media){
+    return res.status(404).json({
+      success: false,
+      message: 'Media not found'
+    })
+  }
+
+
+    return res.status(200).json({
+      success: true,
+      mediaDetails: media
+    })
+
+
+}catch(error){
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })   
+}
+
+
+}
+
+
+export const updateMedia = async(req, res)=>{
+
+
+  try{
+    const {id} = req.params
+
+    
+    const {
+      title,
+      description,
+      price,
+      file_type,
+      file_full_path,
+      is_upload,
+      file_name,
+      file_size
+    } = req.body
+    
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const media = await Media.findByPk(id)
+    if(!media){
+    return res.status(404).json({
+      success: false,
+      message: 'Media not found'
+    })
+  }
+
+
+    let finalFilePath = ''
+    let finalFileSize = 0
+
+    // CASE 1: is_upload is true → from Electron
+    if (is_upload === 'true') {
+      const ext = path.extname(file_full_path).toLowerCase()
+      const mediaType = file_type + 's'
+
+      const uniqueFileName = `${uuidv4()}${ext}`
+      const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
+      const destinationPath = path.join(destinationFolder, uniqueFileName)
+
+      if (!fs.existsSync(destinationFolder)) {
+        fs.mkdirSync(destinationFolder, { recursive: true })
+      }
+
+      fs.copyFileSync(file_full_path, destinationPath)
+
+      finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
+      finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
+    }
+
+    // CASE 2: is_upload is true and req.file is present(not electron api )
+    else if (req.file) {
+      const mediaType = file_type + 's'
+      finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
+      finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+    } else if (is_upload === 'false') {
+      // CASE 3: is_upload is false
+
+      finalFilePath = file_full_path
+      finalFileSize = file_size || 0
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'No file provided.'
+      })
+    }
+
+    
+      media.title = title
+      media.description = description
+      media.file_full_path = file_full_path
+      media.file_path = finalFilePath
+      media.file_type = file_type
+      media.file_size = finalFileSize || file_size
+      media.price = price
+
+      await media.save()
+
+
+    res.status(200).json({ success: true, updatedMedia: media, message: " Media updated successfully" })
+  
+
+
+  }catch(error){
+
+  console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })    
+  }
+}
+
+export const getAllServicesWithMedia = async(req, res)=>{
+
+
+  try{
+
+    const { id } = req.params
+
+    const service = await Service.findByPk(id, {
+      include: [
+        {
+          model: Media,
+          as: 'media_files'
+        }
+      ]
+    })
+
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      })
+    }
+     return res.status(200).json({
+      success: true,
+      service
+    })
+
+
+  }catch(error){
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })       
   }
 }

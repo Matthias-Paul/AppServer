@@ -64,7 +64,7 @@ if (!gotTheLock) {
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.electron')
 
-    // 🚀 Start Express Server as a child process
+    //  Start Express Server as a child process
 
     const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
       stdio: 'inherit',

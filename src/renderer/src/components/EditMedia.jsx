@@ -1,21 +1,22 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { FaArrowLeft } from 'react-icons/fa'
-import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useMutation, useQuery  } from '@tanstack/react-query'
 import getBackendURL from './GetBackendURL'
 import toast from 'react-hot-toast'
 
 
 
-const UploadMedia = () => {
+const EditMedia = () => {
   const navigate = useNavigate()
+  const { id } = useParams()
+const [mediaDetails, setMediaDetails] = useState("")
   const [isUploadFile, setIsUploadFile] = useState(true)
-
   const [mediaType, setMediaType] = useState('')
   const [fileName, setFileName] = useState('')
-  const [description, setDescription] = useState('')
-  const [title, setTitle] = useState('')
-  const [price, setPrice] = useState('')
+  const [description, setDescription] = useState("")
+  const [title, setTitle] = useState("")
+  const [price, setPrice] = useState("")
   const [filePath, setFilePath] = useState('')
 
   const handleBrowse = async () => {
@@ -51,12 +52,46 @@ const UploadMedia = () => {
   console.log('Selected file:', filePath)
   console.log('Media type:', mediaType)
 
-  const uploadMedia = async (formData) => {
+
+
+
+  const fetchMediaDetails = async () => {
+    const baseURL = await getBackendURL()
+    console.log('base url', baseURL)
+    const res = await fetch(`${baseURL}/api/media/${id}`, {
+      method: 'GET'
+    })
+    if (!res.ok) {
+      throw new Error('Failed to fetch media details')
+    }
+    return res.json()
+  }
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['serviceDetails', id],
+    queryFn: fetchMediaDetails
+  })
+
+  useEffect(() => {
+    if (data && data.mediaDetails) {
+      setMediaDetails(data.mediaDetails)
+      console.log('mediaDetails:', data.mediaDetails)
+      setTitle(data?.mediaDetails?.title || '')
+      setDescription(data?.mediaDetails?.description || '')
+      setPrice(data?.mediaDetails?.price || '')
+
+    }
+  }, [data])
+
+
+
+
+  const updateMedia = async (formData) => {
     const token = localStorage.getItem('token')
     const baseURL = await getBackendURL()
 
-    const response = await fetch(`${baseURL}/api/media`, {
-      method: 'POST',
+    const response = await fetch(`${baseURL}/api/media/${id}`, {
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`
       },
@@ -70,7 +105,7 @@ const UploadMedia = () => {
         const errorData = await response.json()
         errorMessage = errorData.message || errorData.error || JSON.stringify(errorData)
       } catch (err) {
-        errorMessage = 'An unknown error occurred during upload'
+        errorMessage = 'An unknown error occurred during update'
         console.log(err)
       }
 
@@ -81,10 +116,10 @@ const UploadMedia = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: uploadMedia,
+    mutationFn: updateMedia,
     onSuccess: (data) => {
-      toast.success('Upload successful!')
-      console.log('Upload result:', data)
+      toast.success('Update successful!')
+      console.log('Update result:', data)
 
       setTitle('')
       setPrice('')
@@ -95,8 +130,8 @@ const UploadMedia = () => {
 
     },
     onError: (error) => {
-      toast.error(error.message || 'Error while uploading')
-      console.error('Upload error:', error)
+      toast.error(error.message || 'Error while updating')
+      console.error('Update error:', error)
     }
   })
 
@@ -111,17 +146,17 @@ const UploadMedia = () => {
     formData.append('file_full_path', filePath)
     formData.append('is_upload', isUploadFile)
 
-    try {
-      const stats = window.electronAPI.getFileStats(filePath)
-      if (stats) {
-        const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
-        formData.append('file_size', sizeInMB)
-      }
-    } catch (err) {
-      toast.error('Failed to get file stats, please select a file')
-      console.error(err)
-      return
+   try {
+    const stats = window.electronAPI.getFileStats(filePath)
+    if (stats) {
+      const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
+      formData.append('file_size', sizeInMB)
     }
+  } catch (err) {
+    toast.error('Failed to get file stats, please select a file!')
+    console.error(err)
+    return
+  }
 
     if (isUploadFile && window.electronAPI.readFileAsBlob) {
       try {
@@ -153,7 +188,7 @@ const UploadMedia = () => {
         </div>
 
         <h2 className=" mt-4 font-bold text-3xl lg:text-4xl text-center mb-5  uppercase ">
-          Upload A New Media{' '}
+          Update A Media{' '}
         </h2>
         <div className="  max-w-[1500px] mx-auto">
           <div className="shadow-md p-5 rounded-lg   w-full ">
@@ -259,7 +294,7 @@ const UploadMedia = () => {
                   mutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                {mutation.isPending ? 'Uploading...' : 'Upload'}
+                {mutation.isPending ? 'Updating...' : 'Update'}
               </button>
             </form>
           </div>
@@ -269,4 +304,4 @@ const UploadMedia = () => {
   )
 }
 
-export default UploadMedia
+export default EditMedia

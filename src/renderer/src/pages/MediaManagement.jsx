@@ -106,6 +106,11 @@ const MediaManagement = () => {
   const medias = data?.pages.flatMap((page) => page.medias) || []
   console.log(medias)
 
+  if(isLoading){
+    return(
+      <div className="text-center text-lg mt-3 text-[#0D47A1]  " > Loading media... </div>
+    )
+  }
   return (
     <>
       <div className="pt-7 min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
@@ -162,32 +167,32 @@ const MediaManagement = () => {
           </button>
         </div>
         <div className="pb-10 ">
-          {medias.length > 1 ? (
+          {medias?.length >= 1 ? (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-3  gap-x-5 gap-y-5">
-                {medias.map((media) => (
-                  <div key={media.id}>
+                {medias?.map((media) => (
+                  <div key={media?.id}>
                     <div className=" flex flex-col items-center text-center justify-center border border-[#0D47A1] rounded-lg p-4 ">
                       <div className="mt-20">
-                        {media.file_type === 'audio' && (
+                        {media?.file_type === 'audio' && (
                           <div>
                             {' '}
                             <FaFileAudio className="w-20 h-20" />{' '}
                           </div>
                         )}
-                        {media.file_type === 'video' && (
+                        {media?.file_type === 'video' && (
                           <div>
                             {' '}
                             <FaFileVideo className="w-20 h-20" />{' '}
                           </div>
                         )}
-                        {media.file_type === 'image' && (
+                        {media?.file_type === 'image' && (
                           <div>
                             {' '}
                             <FaFileImage className="w-20 h-20" />{' '}
                           </div>
                         )}
-                        {media.file_type === 'document' && (
+                        {media?.file_type === 'document' && (
                           <div>
                             {' '}
                             <FaFileAlt className="w-20 h-20" />{' '}
@@ -197,20 +202,22 @@ const MediaManagement = () => {
 
                       <h2 className="font font-semibold text-[20px] capitalize ">
                         {' '}
-                        {media.file_type} file{' '}
+                        {media?.file_type} file{' '}
                       </h2>
-                      <h1 className="font-bold text-[25px] truncate w-full mt-15  ">{media.title}</h1>
+                      <h1 className="font-bold text-[25px] truncate w-full mt-15  ">{media?.title}</h1>
                       <h3 className="font-semibold text-[18px]  ">
-                        File Size: {media.file_size}MB{' '}
+                        File Size: {media?.file_size}MB{' '}
                       </h3>
-                      <h3 className="font-semibold text-[18px]  ">Price: {media.price} Credits</h3>
+                      <h3 className="font-semibold text-[18px]  ">Price: {media?.price} Credits</h3>
                       <div className="flex items-center gap-x-3 mt-4 mb-2  ">
+                      <Link  to={`edit/${media?.id}`} >
                         <button className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   ">
                           {' '}
                           Edit{' '}
                         </button>
+                      </Link>  
                         <button
-                          onClick={() => handleDelete(media.id)}
+                          onClick={() => handleDelete(media?.id)}
                           className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   "
                         >
                           {' '}

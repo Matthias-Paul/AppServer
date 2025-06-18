@@ -63,15 +63,15 @@ export async function startServer() {
   if (!fs.existsSync(configPath)) {
     fs.mkdirSync(path.dirname(configPath), { recursive: true })
     fs.writeFileSync(configPath, JSON.stringify({}, null, 2))
-    console.log('📄 Created new config.json at:', configPath)
+    console.log('Created new config.json at:', configPath)
   }
 
   //update with current config
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
-  console.log('✅ Updated config.json at:', configPath)
+  console.log(' Updated config.json at:', configPath)
 
-  // const frontendEnvPath = path.join(process.cwd(), '../.env')
-  const frontendEnvPath = path.resolve(process.cwd(), '..', '.env')
+  // const frontendEnvPath = path.join(process.cwd(), '.env')
+  const frontendEnvPath = path.resolve(process.cwd(), '.env')
 
   let existingEnv = ''
   if (fs.existsSync(frontendEnvPath)) {
@@ -96,12 +96,12 @@ export async function startServer() {
   setEnvValue('VITE_NETWORK_PASSWORD', password)
 
   fs.writeFileSync(frontendEnvPath, envLines.join('\n'))
-  console.log('✅ Updated frontend .env at:', frontendEnvPath)
+  console.log('Updated frontend .env at:', frontendEnvPath)
 
   testDbConnection()
 
   app.listen(PORT, ip, () => {
-    console.log(`🚀 Server running at: http://${ip}:${PORT}`)
+    console.log(` Server running at: http://${ip}:${PORT}`)
   })
 }
 

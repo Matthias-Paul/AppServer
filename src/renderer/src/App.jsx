@@ -16,6 +16,9 @@ import CreateNewService from './components/CreateNewService'
 import AddMediaToService from './components/AddMediaToService'
 import UploadMedia from './components/UploadMedia'
 import AddUser from './components/AddUser'
+import EditMedia from './components/EditMedia'
+
+
 
 function App() {
   return (
@@ -34,11 +37,12 @@ function App() {
               <Route path="users/addUser" element={<AddUser />} />
               <Route path="network" element={<NetworkManagement />} />
               <Route path="sales" element={<SalesAnalytics />} />
-              <Route path="media" element={<MediaManagement />} />
-              <Route path="media/upload" element={<UploadMedia />} />
-              <Route path="service" element={<ServiceManagement />} />
+                 <Route path="service" element={<ServiceManagement />} />
               <Route path="credit" element={<CreditManagement />} />
               <Route path="service/newService" element={<CreateNewService />} />
+              <Route path="media" element={<MediaManagement />} />
+              <Route path="media/upload" element={<UploadMedia />} />
+              <Route path="media/edit/:id" element={<EditMedia />} />       
               <Route path="service/:id/addMedia" element={<AddMediaToService />} />
             </Route>
           </Route>
