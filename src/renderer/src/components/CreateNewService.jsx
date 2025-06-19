@@ -13,11 +13,22 @@ const CreateNewService = () => {
   const [description, setDescription] = useState('')
   const [isActive, setIsActive] = useState(true)
 
+  const validateImageFile = (file) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
+    return allowedTypes.includes(file.type)
+  }
   const handleFileChange = (e) => {
-    if (e.target.files.length > 0) {
-      setFileName(e.target.files[0].name)
+    const file = e.target.files[0]
+    if (file) {
+      if (!validateImageFile(file)) {
+        toast.error('Only image files (jpeg, jpg, png) are allowed for service banner')
+        e.target.value = ''
+        return
+      }
+      setFileName(file.name)
     }
   }
+
   const token = localStorage.getItem('token')
 
   const createService = async (formData) => {
@@ -93,7 +104,10 @@ const CreateNewService = () => {
         <div className="  max-w-[1500px] mx-auto">
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 "> Name </label>
+              <label className="block text-[#0D47A1]  text-lg xl:text-2xl font-semibold mb-1 ">
+                {' '}
+                Name{' '}
+              </label>
               <input
                 placeholder="Enter service name"
                 value={name}
@@ -163,7 +177,9 @@ const CreateNewService = () => {
             </div>
 
             <div className="mt-6">
-              <label className="block text-lg xl:text-2xl font-medium text-[#0D47A1]  mb-2">Is Active</label>
+              <label className="block text-lg xl:text-2xl font-medium text-[#0D47A1]  mb-2">
+                Is Active
+              </label>
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2">
                   <input

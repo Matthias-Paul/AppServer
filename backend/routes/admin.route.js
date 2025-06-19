@@ -17,6 +17,7 @@ import {
   updateMedia,
   getAllServicesWithMedia,
   settings,
+  checkSettings
 } from '../controllers/admin.js'
 import { registerValidation } from '../middlewares/express-validation.js'
 
@@ -25,10 +26,16 @@ const router = express.Router()
 router.get('/users', verifyUser, getUsers)
 router.get('/services', getAllServices)
 router.post('/addUser', verifyUser, registerValidation, addUser)
-router.put('/settings', verifyUser,  upload.fields([
-  { name: 'church_logo', maxCount: 1 },
-  { name: 'church_banner', maxCount: 1 }
-]), settings)
+router.get('/settings/checks', verifyUser, checkSettings)
+router.put(
+  '/settings',
+  verifyUser,
+  upload.fields([
+    { name: 'church_logo', maxCount: 1 },
+    { name: 'church_banner', maxCount: 1 }
+  ]),
+  settings
+)
 router.post('/services', verifyUser, upload.single('banner'), createService)
 router.post('/media', verifyUser, electronUpload.single('file'), createMedia)
 router.get('/media', getAllMedia)
@@ -36,9 +43,8 @@ router.post('/services/:id/addMedia', verifyUser, electronUpload.single('file'),
 router.get('/services/:id', getServices)
 router.get('/services/:serviceId/media', getServiceMedia)
 router.delete('/media/:id', verifyUser, deleteMedia)
-router.get('/media/:id',  getMedia)
+router.get('/media/:id', getMedia)
 router.put('/media/:id', verifyUser, electronUpload.single('file'), updateMedia)
 router.get('/services/withMedia/:id', getAllServicesWithMedia)
-
 
 export default router

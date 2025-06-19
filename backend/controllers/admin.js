@@ -726,34 +726,25 @@ export const settings = async (req, res) => {
       });
     }
 
-    const {
-      churchName,
-      churchLogoFileName,
-      churchBannerFileName,
-      churchLogoMediaType,
-      churchBannerMediaType
-    } = req.body;
+    const { churchName } = req.body;
 
-    if (!churchName || !churchLogoFileName || !churchBannerFileName) {
-      return res.status(400).json({
-        success: false,
-        message: 'All fields are required'
-      });
+    const logoFile = req.files?.church_logo?.[0];
+    const bannerFile = req.files?.church_banner?.[0];
+
+    const setting = await ChurchSetting.findByPk(1) || await ChurchSetting.create({ id: 1 });
+
+    if (churchName) setting.church_name = churchName;
+
+    if (logoFile) {
+      setting.church_logo_file_path = `/fileStorage/images/${logoFile.filename}`;
+      setting.church_logo_file_type = 'image';
     }
 
-    let setting = await ChurchSetting.findByPk(1);
-    if (!setting) {
-      setting = await ChurchSetting.create({ id: 1 });
+    if (bannerFile) {
+      setting.church_banner_file_path = `/fileStorage/images/${bannerFile.filename}`;
+      setting.church_banner_file_type = 'image';
     }
 
-    const logoFilePath = `/fileStorage/${churchLogoMediaType}/${churchLogoFileName}`;
-    const bannerFilePath = `/fileStorage/${churchBannerMediaType}/${churchBannerFileName}`;
-
-    setting.church_name = churchName;
-    setting.church_logo_file_path = logoFilePath;
-    setting.church_banner_file_path = bannerFilePath;
-    setting.church_logo_file_type = churchLogoMediaType;
-    setting.church_banner_file_type = churchBannerMediaType;
     setting.is_updated = true;
 
     await setting.save();
@@ -764,6 +755,43 @@ export const settings = async (req, res) => {
       setting
     });
 
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};
+
+
+
+
+export const checkSettings = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const setting = await ChurchSetting.findByPk(1);
+
+    if (
+      !setting ||
+      !setting.is_updated
+    ) {
+      return res.status(200).json({
+        success: true,
+        message:"Update church name, logo and banner"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      setting
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({

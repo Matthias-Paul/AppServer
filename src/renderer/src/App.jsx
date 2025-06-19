@@ -17,9 +17,8 @@ import AddMediaToService from './components/AddMediaToService'
 import UploadMedia from './components/UploadMedia'
 import AddUser from './components/AddUser'
 import EditMedia from './components/EditMedia'
-import Settings from "./pages/Settings"
-
-
+import Settings from './pages/Settings'
+import AutoRedirector from './components/Autoredirector'
 
 function App() {
   return (
@@ -32,6 +31,7 @@ function App() {
 
           {/* Admin routes (protected) */}
           <Route element={<ProtectedRoute role="admin" />}>
+            <Route path="/redirector" element={<AutoRedirector />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminHomePage />} />
               <Route path="users" element={<UserManagement />} />
@@ -44,7 +44,7 @@ function App() {
               <Route path="service/newService" element={<CreateNewService />} />
               <Route path="media" element={<MediaManagement />} />
               <Route path="media/upload" element={<UploadMedia />} />
-              <Route path="media/edit/:id" element={<EditMedia />} />       
+              <Route path="media/edit/:id" element={<EditMedia />} />
               <Route path="service/:id/addMedia" element={<AddMediaToService />} />
             </Route>
           </Route>

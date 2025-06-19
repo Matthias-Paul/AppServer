@@ -38,13 +38,14 @@ const Login = () => {
       return data
     },
     onSuccess: (data) => {
-      toast.success('Log in successful! Redirecting to admin dashboard...')
+      toast.success('Log in successful!')
       dispatch(signInSuccess(data.user))
       localStorage.setItem('token', data.token)
       console.log('login user:', data.user)
       setEmail('')
       setPassword('')
-      setTimeout(() => navigate('/admin'), 1000)
+
+      navigate('/redirector')
     },
     onError: (error) => {
       toast.error(error.message)
