@@ -4,6 +4,7 @@ import User from '../models/users.model.js'
 import Service from '../models/service.model.js'
 import Media from '../models/media.model.js'
 import ServiceMedia from '../models/service-media.model.js'
+import ChurchSetting from "../models/ChurchSettings.model.js"
 import { v4 as uuidv4 } from 'uuid'
 import { Op, literal } from 'sequelize'
 import { validationResult, matchedData } from 'express-validator'
@@ -712,3 +713,62 @@ export const getAllServicesWithMedia = async(req, res)=>{
     })       
   }
 }
+
+
+
+
+export const settings = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const {
+      churchName,
+      churchLogoFileName,
+      churchBannerFileName,
+      churchLogoMediaType,
+      churchBannerMediaType
+    } = req.body;
+
+    if (!churchName || !churchLogoFileName || !churchBannerFileName) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      });
+    }
+
+    let setting = await ChurchSetting.findByPk(1);
+    if (!setting) {
+      setting = await ChurchSetting.create({ id: 1 });
+    }
+
+    const logoFilePath = `/fileStorage/${churchLogoMediaType}/${churchLogoFileName}`;
+    const bannerFilePath = `/fileStorage/${churchBannerMediaType}/${churchBannerFileName}`;
+
+    setting.church_name = churchName;
+    setting.church_logo_file_path = logoFilePath;
+    setting.church_banner_file_path = bannerFilePath;
+    setting.church_logo_file_type = churchLogoMediaType;
+    setting.church_banner_file_type = churchBannerMediaType;
+    setting.is_updated = true;
+
+    await setting.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Update successful',
+      setting
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};

@@ -4,6 +4,7 @@ backend/fileStorage/documents
 backend/fileStorage/images
 backend/fileStorage/videos
 backend/fileStorage/audios
+backend/data-storage/db.sqlite
 dist
 out
 /.env

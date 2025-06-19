@@ -113,7 +113,7 @@ const MediaManagement = () => {
   }
   return (
     <>
-      <div className="pt-7 min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
+      <div className="pt-7  text-[#0D47A1] w-full pl-7 overflow-hidden">
         <div className="flex justify-between items-center  ">
           <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> Media Management </h2>
           <Link to="upload">
