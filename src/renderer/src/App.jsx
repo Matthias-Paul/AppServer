@@ -19,6 +19,11 @@ import AddUser from './components/AddUser'
 import EditMedia from './components/EditMedia'
 import Settings from './pages/Settings'
 import AutoRedirector from './components/Autoredirector'
+import EditService from './components/EditService'
+import ManageMediaInAService from './components/ManageMediaInAService'
+import AddExistingMediaToService from './components/AddExistingMediaToService'
+
+
 
 function App() {
   return (
@@ -46,6 +51,11 @@ function App() {
               <Route path="media/upload" element={<UploadMedia />} />
               <Route path="media/edit/:id" element={<EditMedia />} />
               <Route path="service/:id/addMedia" element={<AddMediaToService />} />
+              <Route path="service/edit/:id" element={<EditService />} />
+              <Route path="service/manageMedia/:id" element={<ManageMediaInAService />} />
+              <Route path="service/addExistingMedia/:id" element={<AddExistingMediaToService />} />
+
+
             </Route>
           </Route>
         </Routes>

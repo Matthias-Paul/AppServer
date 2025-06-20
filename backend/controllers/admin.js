@@ -800,3 +800,184 @@ export const checkSettings = async (req, res) => {
     });
   }
 };
+
+
+
+export const editService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const { id } = req.params;
+    const { name, theme, description, isActive } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name is required'
+      });
+    }
+
+    const bannerPath = req.file ? `/fileStorage/images/${req.file.filename}` : null;
+
+    const serviceToEdit = await Service.findByPk(id);
+    if (!serviceToEdit) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    serviceToEdit.name = name;
+
+    if (description) serviceToEdit.description = description;
+    if (theme) serviceToEdit.theme = theme;
+    if (typeof isActive === 'boolean') serviceToEdit.is_active = isActive;
+    if (bannerPath) serviceToEdit.banner_image = bannerPath;
+
+    await serviceToEdit.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Service edited successfully',
+      service: serviceToEdit
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};
+
+
+
+export const removeMediaFromService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const { serviceId, mediaId } = req.params;
+
+    const mediaToRemove = await Media.findByPk(mediaId);
+    if (!mediaToRemove) {
+      return res.status(400).json({
+        success: false,
+        message: 'Media not found'
+      });
+    }
+
+    const service = await Service.findByPk(serviceId); 
+    if (!service) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    await ServiceMedia.destroy({ where: { media_id: mediaId, service_id: serviceId } });
+    return res.status(200).json({
+      success: true,
+      message: 'Media removed successfully'
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};
+
+
+export const getConnectionStatus = async (req, res) => {
+  try {
+    const setting = await ChurchSetting.findByPk(1);
+
+    return res.status(200).json({
+      status: 'Connected',
+      church_name: setting?.church_name || 'Unknown'
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal Server error'
+    });
+  }
+};
+
+
+export const addExistingMediaToService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const { serviceId, mediaId } = req.params;
+
+    const service = await Service.findByPk(serviceId);
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      });
+    }
+
+    const media = await Media.findByPk(mediaId);
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      });
+    }
+
+    const existing = await ServiceMedia.findOne({
+      where: {
+        service_id: serviceId,
+        media_id: mediaId
+      }
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'Media already exists in service'
+      });
+    }
+
+    const mediaAdded = await ServiceMedia.create({
+      service_id: serviceId,
+      media_id: mediaId
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Media added to service successfully',
+      mediaAdded
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};
+
+
+
+

@@ -211,7 +211,7 @@ const Settings = () => {
             <img
               src={churchLogo}
               alt="Church Banner"
-              className="w-full max-w-xl border border-[#0D47A1]  rounded-lg "
+              className="w-full max-w-xl border border-[#0D47A1] object-cover  rounded-lg "
             />
           </div>
         )}
@@ -250,7 +250,7 @@ const Settings = () => {
               <img
                 src={churchBanner}
                 alt="Church Banner"
-                className="w-full max-w-xl border border-[#0D47A1]  rounded-lg "
+                className="w-full max-w-xl border object-cover border-[#0D47A1]  rounded-lg "
               />
             </div>
           )}

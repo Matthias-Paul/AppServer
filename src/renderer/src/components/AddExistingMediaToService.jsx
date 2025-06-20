@@ -1,18 +1,22 @@
 import SearchBar from '../components/SearchBar'
 import { useEffect, useState } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom'
 import { FaFileAudio, FaFileVideo, FaFileImage, FaFileAlt } from 'react-icons/fa'
 import getBackendURL from '../components/GetBackendURL.jsx'
-import { useInfiniteQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient, useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { FaArrowLeft } from 'react-icons/fa'
 
-const MediaManagement = () => {
+const AddExistingMediaToService = () => {
   const [searchParams] = useSearchParams()
   const filter = searchParams.get('filter')
+    const [serviceDetails, setServiceDetails] = useState(null)
+
   const [filterBy, setFilterBy] = useState('')
   const [baseURL, setBaseURL] = useState('')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { id } = useParams()
 
   const token = localStorage.getItem('token')
 
@@ -48,36 +52,62 @@ const MediaManagement = () => {
     navigate({ search: params.toString() })
   }
 
-  const deleteMedia = async ({ id }) => {
-    const res = await fetch(`${baseURL}/api/media/${id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+
+   const fetchServiceDetails = async () => {
+    const baseURL = await getBackendURL()
+    console.log('base url', baseURL)
+    const res = await fetch(`${baseURL}/api/services/${id}`, {
+      method: 'GET'
     })
     if (!res.ok) {
-      throw new Error('Failed to delete media')
+      throw new Error('Failed to fetch service details')
     }
     return res.json()
   }
-  const { mutate, isPending } = useMutation({
-    mutationFn: deleteMedia,
-    onSuccess: (data) => {
-      toast.success('Media deleted successfully!')
-      queryClient.invalidateQueries(['medias', data])
-    },
-    onError: (error) => {
-      toast.error(error.message)
-      console.log(error.message)
-    }
+
+  const { data:serviceData } = useQuery({
+    queryKey: ['serviceDetails', id],
+    queryFn: fetchServiceDetails
   })
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this media?')) {
-      console.log('Deleting media with ID', id)
-
-      mutate({ id })
+  useEffect(() => {
+    if (serviceData && serviceData.serviceDetails) {
+      setServiceDetails(serviceData.serviceDetails)
+      console.log('serviceDetails:', serviceData.serviceDetails)
     }
+  }, [serviceData])
+
+
+    const addMedia = async ({ mediaId }) => {
+      const res = await fetch(`${baseURL}/api/services/addExistingMedia/${id}/${mediaId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+     const data = await res.json() 
+      if (!res.ok) {
+        throw new Error(data?.message || 'Failed to add media')
+      }
+
+      return data 
+    }
+    const { mutate, isPending } = useMutation({
+      mutationFn: addMedia,
+      onSuccess: (data) => {
+        toast.success(data.message)
+        queryClient.invalidateQueries(['medias', data])
+      },
+      onError: (error) => {
+        toast.error(error.message)
+        console.log(error.message)
+      }
+    })
+
+  const handleAdd = (mediaId) => {
+    console.log('adding media with ID', mediaId)
+ 
+    mutate({ mediaId })
   }
 
   const fetchMedias = async ({ pageParam = 1 }) => {
@@ -106,21 +136,20 @@ const MediaManagement = () => {
   const medias = data?.pages.flatMap((page) => page.medias) || []
   console.log(medias)
 
-  if(isLoading){
-    return(
-      <div className="text-center text-lg mt-3 text-[#0D47A1]  " > Loading media... </div>
-    )
+  if (isLoading) {
+    return <div className="text-center text-lg mt-3 text-[#0D47A1]  "> Loading media... </div>
   }
   return (
     <>
-      <div className="pt-7  text-[#0D47A1] w-full pl-7 overflow-hidden">
-        <div className="flex justify-between items-center  ">
-          <h2 className=" text-[#0D47A1]  font-bold text-3xl lg:text-5xl "> Media Management </h2>
-          <Link to="upload">
-            <button className="bg-[#0D47A1]  text-[#E3F2FD] text-xl lg:text-2xl cursor-pointer py-2 px-6 rounded-lg text-center  ">
-              Upload Media
-            </button>
-          </Link>
+      <div className="pt-6  text-[#0D47A1] w-full pl-7 overflow-hidden">
+        <div className="flex flex-col  ">
+          <div className="flex justify-between mb-6 items-center font-semibold text-[18px]  ">
+            <Link className="flex items-center  " to={`/admin/service/manageMedia/${id}`}>
+              <FaArrowLeft className="text-[20px] flex mr-1" />
+              <h2>Back to manage service</h2>
+            </Link>
+          </div>
+          <h2 className=" text-[#0D47A1]  font-bold text-4xl mb-3  "> Add existing media to {serviceDetails?.name} </h2>
         </div>
         <SearchBar placeholder={'Search media files...'} />
 
@@ -204,24 +233,20 @@ const MediaManagement = () => {
                         {' '}
                         {media?.file_type} file{' '}
                       </h2>
-                      <h1 className="font-bold text-[25px] truncate w-full mt-15  ">{media?.title}</h1>
+                      <h1 className="font-bold text-[25px] truncate w-full mt-15  ">
+                        {media?.title}
+                      </h1>
                       <h3 className="font-semibold text-[18px]  ">
                         File Size: {media?.file_size}MB{' '}
                       </h3>
                       <h3 className="font-semibold text-[18px]  ">Price: {media?.price} Credits</h3>
-                      <div className="flex items-center gap-x-3 mt-4 mb-2  ">
-                      <Link  to={`edit/${media?.id}`} >
-                        <button className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   ">
-                          {' '}
-                          Edit{' '}
-                        </button>
-                      </Link>  
+                      <div className="flex w-full items-center gap-x-3 mt-4 mb-2  ">
                         <button
-                          onClick={() => handleDelete(media?.id)}
-                          className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   "
+                          onClick={() => handleAdd(media?.id)}
+                          className=" active:bg-[#E3F2FD] active:text-[#0D47A1] py-[8px] w-full cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[20px] rounded-lg   "
                         >
                           {' '}
-                          Delete{' '}
+                          Add
                         </button>
                       </div>
                     </div>
@@ -249,4 +274,4 @@ const MediaManagement = () => {
   )
 }
 
-export default MediaManagement
+export default AddExistingMediaToService
