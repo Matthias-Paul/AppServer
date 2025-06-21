@@ -11,7 +11,7 @@ const CreditManagement = () => {
     <>
       <div  className="pt-7  text-[#0D47A1] w-full pl-7 overflow-hidden" >
         <div className="flex justify-between items-center  ">
-          <h2 className=" text-[#0D47A1]  font-bold text-3xl xl:text-5xl "> Credits Management </h2>
+          <h2 className=" text-[#0D47A1]  font-bold pb-4 text-3x l xl:text-5xl "> Credits Management </h2>
           <div  className="flex  gap-x-4" >
           <Link to="">
             <button className="bg-[#0D47A1]  text-[#E3F2FD] font-semibold text-xl cursor-pointer py-2 px-4 rounded-lg text-center  ">
@@ -24,7 +24,9 @@ const CreditManagement = () => {
             </button>
           </Link>
          </div> 
-        </div>     
+        </div> 
+
+
        </div>
     </>
   )

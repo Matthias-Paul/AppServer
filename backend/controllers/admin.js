@@ -913,6 +913,7 @@ export const getConnectionStatus = async (req, res) => {
 
     return res.status(200).json({
       status: 'Connected',
+      logo: setting?.church_logo_file_path || "",
       church_name: setting?.church_name || 'Unknown'
     });
   } catch (error) {
