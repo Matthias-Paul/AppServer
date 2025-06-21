@@ -449,7 +449,6 @@ export const deleteMedia = async (req, res) => {
     const __dirname = dirname(__filename)
     const storageRoot = path.join(__dirname, '..')
 
-    console.log('storage', storageRoot)
     if (mediaToDelete.file_path && mediaToDelete.file_path.startsWith('/fileStorage')) {
       const filePath = path.join(storageRoot, mediaToDelete.file_path)
       
@@ -581,11 +580,11 @@ try{
 export const updateMedia = async(req, res)=>{
 
 
-  try{
+    try{
     const {id} = req.params
 
     
-    const {
+     const {
       title,
       description,
       price,
@@ -603,62 +602,71 @@ export const updateMedia = async(req, res)=>{
       })
     }
 
-    const media = await Media.findByPk(id)
-    if(!media){
-    return res.status(404).json({
-      success: false,
-      message: 'Media not found'
-    })
-  }
+          const media = await Media.findByPk(id)
+          if(!media){
+          return res.status(404).json({
+            success: false,
+            message: 'Media not found'
+          })
+        }
 
 
-    let finalFilePath = ''
-    let finalFileSize = 0
+          let finalFilePath = media.file_path
+        let finalFileSize = media.file_size
+        let finalFileType = media.file_type
 
-    // CASE 1: is_upload is true → from Electron
-    if (is_upload === 'true') {
-      const ext = path.extname(file_full_path).toLowerCase()
-      const mediaType = file_type + 's'
+        console.log("isUpload", is_upload)
+        // Only update file if new one is provided
+        if (is_upload  && file_full_path) {
+          const ext = path.extname(file_full_path).toLowerCase()
+          const mediaType = file_type + 's'
 
-      const uniqueFileName = `${uuidv4()}${ext}`
-      const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
-      const destinationPath = path.join(destinationFolder, uniqueFileName)
+          const uniqueFileName = `${uuidv4()}${ext}`
+          const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
+          const destinationPath = path.join(destinationFolder, uniqueFileName)
 
-      if (!fs.existsSync(destinationFolder)) {
-        fs.mkdirSync(destinationFolder, { recursive: true })
-      }
 
-      fs.copyFileSync(file_full_path, destinationPath)
 
-      finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
-      finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
-    }
+           console.log('Destination folder:', destinationFolder)
+  console.log('Destination path:', destinationPath)
 
-    // CASE 2: is_upload is true and req.file is present(not electron api )
-    else if (req.file) {
-      const mediaType = file_type + 's'
-      finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
-      finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
-    } else if (is_upload === 'false') {
-      // CASE 3: is_upload is false
 
-      finalFilePath = file_full_path
-      finalFileSize = file_size || 0
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: 'No file provided.'
-      })
-    }
+          if (!fs.existsSync(destinationFolder)) {
+            fs.mkdirSync(destinationFolder, { recursive: true })
+          }
 
-    
-      media.title = title
-      media.description = description
-      media.file_full_path = file_full_path
-      media.file_path = finalFilePath
-      media.file_type = file_type
-      media.file_size = finalFileSize || file_size
-      media.price = price
+          fs.copyFileSync(file_full_path, destinationPath)
+
+            console.log('File copied successfully!')
+
+          finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
+          finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
+          finalFileType = file_type
+        }
+
+        else if (req.file) {
+          const mediaType = file_type + 's'
+          finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
+          finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+          finalFileType = file_type
+        }
+
+        else if (!is_upload && file_full_path) {
+          finalFilePath = file_full_path
+          finalFileSize = file_size || 0
+          finalFileType = file_type
+        }
+
+        if (title) media.title = title
+        if (description !== undefined) media.description = description
+        if (price !== undefined) media.price = price
+
+        if (file_full_path || req.file || !is_upload) {
+          media.file_full_path = file_full_path
+          media.file_path = finalFilePath
+          media.file_size = finalFileSize
+          media.file_type = finalFileType
+        }
 
       await media.save()
 
@@ -977,6 +985,7 @@ export const addExistingMediaToService = async (req, res) => {
     });
   }
 };
+
 
 
 

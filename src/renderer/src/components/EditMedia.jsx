@@ -142,40 +142,38 @@ const [mediaDetails, setMediaDetails] = useState("")
     formData.append('title', title)
     formData.append('description', description)
     formData.append('price', price)
-    formData.append('file_type', mediaType)
-    formData.append('file_full_path', filePath)
     formData.append('is_upload', isUploadFile)
 
-   try {
+
+    if (filePath) {
+  try {
     const stats = window.electronAPI.getFileStats(filePath)
     if (stats) {
       const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
       formData.append('file_size', sizeInMB)
     }
+
+    if (isUploadFile && window.electronAPI.readFileAsBlob) {
+      const { buffer, mimeType } = await window.electronAPI.readFileAsBlob(filePath)
+      const blob = new Blob([new Uint8Array(buffer)], {
+        type: mimeType || 'application/octet-stream'
+      })
+
+      const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
+      formData.append('file', blob, fileNameOnly)
+      formData.append('file_type', mediaType)
+      formData.append('file_full_path', filePath)
+    }
   } catch (err) {
-    toast.error('Failed to get file stats, please select a file!')
+    toast.error('Failed to process selected file')
     console.error(err)
     return
   }
-
-    if (isUploadFile && window.electronAPI.readFileAsBlob) {
-      try {
-        const { buffer, mimeType } = await window.electronAPI.readFileAsBlob(filePath)
-        const blob = new Blob([new Uint8Array(buffer)], {
-          type: mimeType || 'application/octet-stream'
-        })
-
-        const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
-        formData.append('file', blob, fileNameOnly)
-      } catch (err) {
-        toast.error('Failed to read file from disk')
-        console.error(err)
-        return
-      }
-    }
+}
 
     mutation.mutate(formData)
   }
+  console.log("isUploadFile", isUploadFile)
 
   return (
     <>
@@ -214,7 +212,6 @@ const [mediaDetails, setMediaDetails] = useState("")
                   <input
                     type="text"
                     value={filePath}
-                    required
                     readOnly
                     placeholder="No file selected"
                     className="border px-2 border-[#0D47A1] rounded-lg py-3 w-full text-lg focus:outline-none"
