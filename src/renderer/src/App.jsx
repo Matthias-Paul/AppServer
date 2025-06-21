@@ -22,6 +22,9 @@ import AutoRedirector from './components/Autoredirector'
 import EditService from './components/EditService'
 import ManageMediaInAService from './components/ManageMediaInAService'
 import AddExistingMediaToService from './components/AddExistingMediaToService'
+import CreditHistory from "./pages/CreditHistory"
+import CreditUsage from  "./pages/CreditUsage"
+import CreditAllocation from  "./pages/CreditAllocation"
 
 
 
@@ -44,7 +47,14 @@ function App() {
               <Route path="network" element={<NetworkManagement />} />
               <Route path="sales" element={<SalesAnalytics />} />
               <Route path="service" element={<ServiceManagement />} />
-              <Route path="credit" element={<CreditManagement />} />
+
+              <Route path="credit" element={<CreditManagement />}>
+                <Route index element={<CreditAllocation />} />
+                <Route path="history" element={<CreditHistory />} />
+                <Route path="usage" element={<CreditUsage />} />
+
+                
+              </Route>
               <Route path="settings" element={<Settings />} />
               <Route path="service/newService" element={<CreateNewService />} />
               <Route path="media" element={<MediaManagement />} />

@@ -2,7 +2,8 @@ import { createSlice } from '@reduxjs/toolkit'
 
 const initialState = {
   loginAdmin: null,
-  churchProfile: null
+  churchProfile: null,
+  allUser: [],
 }
 
 const userSlice = createSlice({
@@ -17,10 +18,13 @@ const userSlice = createSlice({
     },
     UpdateChurchProfile: (state, action) => {
       state.churchProfile = action.payload
+    },
+    UpdateAllUser: (state, action) => {
+      state.allUser = action.payload
     }
   }
 })
 // destructuring declaration
-export const { signInSuccess, logOutSuccess, UpdateChurchProfile } = userSlice.actions
+export const { signInSuccess, UpdateAllUser, logOutSuccess, UpdateChurchProfile } = userSlice.actions
 
 export default userSlice.reducer

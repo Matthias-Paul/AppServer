@@ -4,15 +4,14 @@ import User from '../models/users.model.js'
 import Service from '../models/service.model.js'
 import Media from '../models/media.model.js'
 import ServiceMedia from '../models/service-media.model.js'
-import ChurchSetting from "../models/ChurchSettings.model.js"
+import ChurchSetting from '../models/ChurchSettings.model.js'
+import Transaction from '../models/transaction.model.js'
 import { v4 as uuidv4 } from 'uuid'
 import { Op, literal } from 'sequelize'
 import { validationResult, matchedData } from 'express-validator'
 import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
-
-
 
 export const getUsers = async (req, res) => {
   try {
@@ -451,7 +450,7 @@ export const deleteMedia = async (req, res) => {
 
     if (mediaToDelete.file_path && mediaToDelete.file_path.startsWith('/fileStorage')) {
       const filePath = path.join(storageRoot, mediaToDelete.file_path)
-      
+
       fs.unlink(filePath, (err) => {
         if (err) {
           console.warn('File deletion failed:', err.message)
@@ -540,51 +539,36 @@ export const addUser = async (req, res) => {
   }
 }
 
-export const getMedia = async(req, res)=>{
+export const getMedia = async (req, res) => {
+  try {
+    const { id } = req.params
 
-  
-
-
-try{
-
-  const { id } = req.params
-
-
-  const media = await Media.findByPk(id)
-  if(!media){
-    return res.status(404).json({
-      success: false,
-      message: 'Media not found'
-    })
-  }
-
+    const media = await Media.findByPk(id)
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
 
     return res.status(200).json({
       success: true,
       mediaDetails: media
     })
-
-
-}catch(error){
+  } catch (error) {
     console.log(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    })   
+    })
+  }
 }
 
+export const updateMedia = async (req, res) => {
+  try {
+    const { id } = req.params
 
-}
-
-
-export const updateMedia = async(req, res)=>{
-
-
-    try{
-    const {id} = req.params
-
-    
-     const {
+    const {
       title,
       description,
       price,
@@ -594,7 +578,7 @@ export const updateMedia = async(req, res)=>{
       file_name,
       file_size
     } = req.body
-    
+
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -602,94 +586,80 @@ export const updateMedia = async(req, res)=>{
       })
     }
 
-          const media = await Media.findByPk(id)
-          if(!media){
-          return res.status(404).json({
-            success: false,
-            message: 'Media not found'
-          })
-        }
+    const media = await Media.findByPk(id)
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
 
+    let finalFilePath = media.file_path
+    let finalFileSize = media.file_size
+    let finalFileType = media.file_type
 
-          let finalFilePath = media.file_path
-        let finalFileSize = media.file_size
-        let finalFileType = media.file_type
+    console.log('isUpload', is_upload)
+    // Only update file if new one is provided
+    if (is_upload && file_full_path) {
+      const ext = path.extname(file_full_path).toLowerCase()
+      const mediaType = file_type + 's'
 
-        console.log("isUpload", is_upload)
-        // Only update file if new one is provided
-        if (is_upload  && file_full_path) {
-          const ext = path.extname(file_full_path).toLowerCase()
-          const mediaType = file_type + 's'
+      const uniqueFileName = `${uuidv4()}${ext}`
+      const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
+      const destinationPath = path.join(destinationFolder, uniqueFileName)
 
-          const uniqueFileName = `${uuidv4()}${ext}`
-          const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
-          const destinationPath = path.join(destinationFolder, uniqueFileName)
+      console.log('Destination folder:', destinationFolder)
+      console.log('Destination path:', destinationPath)
 
+      if (!fs.existsSync(destinationFolder)) {
+        fs.mkdirSync(destinationFolder, { recursive: true })
+      }
 
+      fs.copyFileSync(file_full_path, destinationPath)
 
-           console.log('Destination folder:', destinationFolder)
-  console.log('Destination path:', destinationPath)
+      console.log('File copied successfully!')
 
+      finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
+      finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
+      finalFileType = file_type
+    } else if (req.file) {
+      const mediaType = file_type + 's'
+      finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
+      finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      finalFileType = file_type
+    } else if (!is_upload && file_full_path) {
+      finalFilePath = file_full_path
+      finalFileSize = file_size || 0
+      finalFileType = file_type
+    }
 
-          if (!fs.existsSync(destinationFolder)) {
-            fs.mkdirSync(destinationFolder, { recursive: true })
-          }
+    if (title) media.title = title
+    if (description !== undefined) media.description = description
+    if (price !== undefined) media.price = price
 
-          fs.copyFileSync(file_full_path, destinationPath)
+    if (file_full_path || req.file || !is_upload) {
+      media.file_full_path = file_full_path
+      media.file_path = finalFilePath
+      media.file_size = finalFileSize
+      media.file_type = finalFileType
+    }
 
-            console.log('File copied successfully!')
+    await media.save()
 
-          finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
-          finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
-          finalFileType = file_type
-        }
-
-        else if (req.file) {
-          const mediaType = file_type + 's'
-          finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
-          finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
-          finalFileType = file_type
-        }
-
-        else if (!is_upload && file_full_path) {
-          finalFilePath = file_full_path
-          finalFileSize = file_size || 0
-          finalFileType = file_type
-        }
-
-        if (title) media.title = title
-        if (description !== undefined) media.description = description
-        if (price !== undefined) media.price = price
-
-        if (file_full_path || req.file || !is_upload) {
-          media.file_full_path = file_full_path
-          media.file_path = finalFilePath
-          media.file_size = finalFileSize
-          media.file_type = finalFileType
-        }
-
-      await media.save()
-
-
-    res.status(200).json({ success: true, updatedMedia: media, message: " Media updated successfully" })
-  
-
-
-  }catch(error){
-
-  console.log(error)
+    res
+      .status(200)
+      .json({ success: true, updatedMedia: media, message: ' Media updated successfully' })
+  } catch (error) {
+    console.log(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    })    
+    })
   }
 }
 
-export const getAllServicesWithMedia = async(req, res)=>{
-
-
-  try{
-
+export const getAllServicesWithMedia = async (req, res) => {
+  try {
     const { id } = req.params
 
     const service = await Service.findByPk(id, {
@@ -707,23 +677,18 @@ export const getAllServicesWithMedia = async(req, res)=>{
         message: 'Service not found'
       })
     }
-     return res.status(200).json({
+    return res.status(200).json({
       success: true,
       service
     })
-
-
-  }catch(error){
+  } catch (error) {
     console.log(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    })       
+    })
   }
 }
-
-
-
 
 export const settings = async (req, res) => {
   try {
@@ -731,49 +696,45 @@ export const settings = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const { churchName } = req.body;
+    const { churchName } = req.body
 
-    const logoFile = req.files?.church_logo?.[0];
-    const bannerFile = req.files?.church_banner?.[0];
+    const logoFile = req.files?.church_logo?.[0]
+    const bannerFile = req.files?.church_banner?.[0]
 
-    const setting = await ChurchSetting.findByPk(1) || await ChurchSetting.create({ id: 1 });
+    const setting = (await ChurchSetting.findByPk(1)) || (await ChurchSetting.create({ id: 1 }))
 
-    if (churchName) setting.church_name = churchName;
+    if (churchName) setting.church_name = churchName
 
     if (logoFile) {
-      setting.church_logo_file_path = `/fileStorage/images/${logoFile.filename}`;
-      setting.church_logo_file_type = 'image';
+      setting.church_logo_file_path = `/fileStorage/images/${logoFile.filename}`
+      setting.church_logo_file_type = 'image'
     }
 
     if (bannerFile) {
-      setting.church_banner_file_path = `/fileStorage/images/${bannerFile.filename}`;
-      setting.church_banner_file_type = 'image';
+      setting.church_banner_file_path = `/fileStorage/images/${bannerFile.filename}`
+      setting.church_banner_file_type = 'image'
     }
 
-    setting.is_updated = true;
+    setting.is_updated = true
 
-    await setting.save();
+    await setting.save()
 
     return res.status(200).json({
       success: true,
       message: 'Update successful',
       setting
-    });
-
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
-
-
-
+}
 
 export const checkSettings = async (req, res) => {
   try {
@@ -781,35 +742,30 @@ export const checkSettings = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const setting = await ChurchSetting.findByPk(1);
+    const setting = await ChurchSetting.findByPk(1)
 
-    if (
-      !setting ||
-      !setting.is_updated
-    ) {
+    if (!setting || !setting.is_updated) {
       return res.status(200).json({
         success: true,
-        message:"Update church name, logo and banner"
-      });
+        message: 'Update church name, logo and banner'
+      })
     }
 
     return res.status(200).json({
       success: true,
       setting
-    });
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
-
-
+}
 
 export const editService = async (req, res) => {
   try {
@@ -817,53 +773,51 @@ export const editService = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const { id } = req.params;
-    const { name, theme, description, isActive } = req.body;
+    const { id } = req.params
+    const { name, theme, description, isActive } = req.body
 
     if (!name) {
       return res.status(400).json({
         success: false,
         message: 'Name is required'
-      });
+      })
     }
 
-    const bannerPath = req.file ? `/fileStorage/images/${req.file.filename}` : null;
+    const bannerPath = req.file ? `/fileStorage/images/${req.file.filename}` : null
 
-    const serviceToEdit = await Service.findByPk(id);
+    const serviceToEdit = await Service.findByPk(id)
     if (!serviceToEdit) {
       return res.status(404).json({
         success: false,
         message: 'Service not found'
-      });
+      })
     }
 
-    serviceToEdit.name = name;
+    serviceToEdit.name = name
 
-    if (description) serviceToEdit.description = description;
-    if (theme) serviceToEdit.theme = theme;
-    if (typeof isActive === 'boolean') serviceToEdit.is_active = isActive;
-    if (bannerPath) serviceToEdit.banner_image = bannerPath;
+    if (description) serviceToEdit.description = description
+    if (theme) serviceToEdit.theme = theme
+    if (typeof isActive === 'boolean') serviceToEdit.is_active = isActive
+    if (bannerPath) serviceToEdit.banner_image = bannerPath
 
-    await serviceToEdit.save();
+    await serviceToEdit.save()
 
     return res.status(200).json({
       success: true,
       message: 'Service edited successfully',
       service: serviceToEdit
-    });
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
-
-
+}
 
 export const removeMediaFromService = async (req, res) => {
   try {
@@ -871,86 +825,86 @@ export const removeMediaFromService = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const { serviceId, mediaId } = req.params;
+    const { serviceId, mediaId } = req.params
 
-    const mediaToRemove = await Media.findByPk(mediaId);
+    const mediaToRemove = await Media.findByPk(mediaId)
     if (!mediaToRemove) {
       return res.status(400).json({
         success: false,
         message: 'Media not found'
-      });
+      })
     }
 
-    const service = await Service.findByPk(serviceId); 
+    const service = await Service.findByPk(serviceId)
     if (!service) {
       return res.status(400).json({
         success: false,
         message: 'Service not found'
-      });
+      })
     }
 
-    await ServiceMedia.destroy({ where: { media_id: mediaId, service_id: serviceId } });
+    await ServiceMedia.destroy({ where: { media_id: mediaId, service_id: serviceId } })
     return res.status(200).json({
       success: true,
       message: 'Media removed successfully'
-    });
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
-
+}
 
 export const getConnectionStatus = async (req, res) => {
   try {
-    const setting = await ChurchSetting.findByPk(1);
+    const setting = await ChurchSetting.findByPk(1)
 
     return res.status(200).json({
       status: 'Connected',
-      logo: setting?.church_logo_file_path || "",
+      logo: setting?.church_logo_file_path || '',
       church_name: setting?.church_name || 'Unknown'
-    });
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       status: 'error',
       message: 'Internal Server error'
-    });
+    })
   }
-};
-
+}
 
 export const addExistingMediaToService = async (req, res) => {
+
+
   try {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const { serviceId, mediaId } = req.params;
+    const { serviceId, mediaId } = req.params
 
-    const service = await Service.findByPk(serviceId);
+    const service = await Service.findByPk(serviceId)
     if (!service) {
       return res.status(404).json({
         success: false,
         message: 'Service not found'
-      });
+      })
     }
 
-    const media = await Media.findByPk(mediaId);
+    const media = await Media.findByPk(mediaId)
     if (!media) {
       return res.status(404).json({
         success: false,
         message: 'Media not found'
-      });
+      })
     }
 
     const existing = await ServiceMedia.findOne({
@@ -958,34 +912,34 @@ export const addExistingMediaToService = async (req, res) => {
         service_id: serviceId,
         media_id: mediaId
       }
-    });
+    })
 
     if (existing) {
       return res.status(409).json({
         success: false,
         message: 'Media already exists in service'
-      });
+      })
     }
 
     const mediaAdded = await ServiceMedia.create({
       service_id: serviceId,
       media_id: mediaId
-    });
+    })
 
     return res.status(200).json({
       success: true,
       message: 'Media added to service successfully',
       mediaAdded
-    });
-
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
+}
+
 
 
 

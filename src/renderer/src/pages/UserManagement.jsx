@@ -6,11 +6,15 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import getBackendURL from '../components/GetBackendURL.jsx'
 
+
+
+
 const UserManagement = () => {
   const [searchParams] = useSearchParams()
   const filter = searchParams.get('filter')
   const [filterBy, setFilterBy] = useState('')
   const navigate = useNavigate()
+
 
   console.log(filter)
   useEffect(() => {
@@ -55,7 +59,7 @@ const UserManagement = () => {
     return res.json()
   }
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isSuccess } = useInfiniteQuery({
     queryKey: ['users', searchParams.toString()],
     queryFn: fetchUsers,
     getNextPageParam: (lastPage, pages) => {
@@ -63,6 +67,7 @@ const UserManagement = () => {
     }
   })
 
+  
   const users = data?.pages.flatMap((page) => page.users) || []
 
   return (
