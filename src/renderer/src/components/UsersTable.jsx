@@ -2,7 +2,7 @@ const UsersTable = ({ users, isLoading }) => {
 
   console.log(users)
   return (
-    <div className="w-full">
+    <div className="w-full p-4 shadow-lg ">
       {isLoading ? (
         <div className="text-[#0D47A1] font-semibold text-lg">Loading...</div>
       ) : users.length > 0 ? (

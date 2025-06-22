@@ -6,6 +6,7 @@ import Media from '../models/media.model.js'
 import ServiceMedia from '../models/service-media.model.js'
 import ChurchSetting from '../models/ChurchSettings.model.js'
 import Transaction from '../models/transaction.model.js'
+import CreditAllocation from '../models/creditsAllocation.model.js'
 import { v4 as uuidv4 } from 'uuid'
 import { Op, literal } from 'sequelize'
 import { validationResult, matchedData } from 'express-validator'
@@ -940,8 +941,113 @@ export const addExistingMediaToService = async (req, res) => {
   }
 }
 
+export const allocateCredits = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role === 'client') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access',
+      });
+    }
+
+    const { id } = req.params;
+    const { credit, reason } = req.body;
+
+    if (!id || !credit || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required',
+      });
+    }
+
+    const creditToAdd = parseFloat(credit);
+    if (isNaN(creditToAdd) || creditToAdd <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Credit must be a valid positive number',
+      });
+    }
+
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    user.credits = (user.credits || 0) + creditToAdd;
+    await user.save();
+
+    const CreditAllocationDetails = await CreditAllocation.create({
+      user_id: id,
+      credits_added: creditToAdd,
+      reason,
+      generatedBy: req.user.id,
+    });
+
+    return res.status(201).json({
+      success: true,
+      CreditAllocationDetails,
+      message: 'Credit allocated to user successfully',
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+};
 
 
+export const creditHistory = async (req, res) => {
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 10
+  const offset = (page - 1) * limit
+
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access',
+      })
+    }
+
+    const { rows, count } = await CreditAllocation.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'allocatedTo',
+          attributes: ['id', 'email'],
+        },
+        {
+          model: User,
+          as: 'allocatedBy',
+          attributes: ['id', 'email'],
+        },
+      ],
+    })
+
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      hasNextPage,
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    })
+  }
+}
 
 
 

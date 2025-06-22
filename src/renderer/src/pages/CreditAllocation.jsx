@@ -11,8 +11,9 @@ const CreditAllocation = () => {
   const [selectedUser, setSelectedUser] = useState('')
   const [selectedUserId, setSelectedUserId] = useState('')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [credit, setCredit] = useState(null)
+  const [credit, setCredit] = useState("")
   const [reason, setReason] = useState('')
+  const queryClient = useQueryClient()
 
   const token = localStorage.getItem('token')
   const fetchUsers = async ({ pageParam = 1 }) => {
@@ -91,11 +92,55 @@ const CreditAllocation = () => {
     setIsMenuOpen(false)
   }
 
+  const creditAllocationMutation = useMutation({
+    mutationFn: async () => {
+      const baseURL = await getBackendURL()
+      const token = localStorage.getItem('token')
 
-  const handleSubmit = (e)=>{
-      e.preventDefault()
+      console.log('base url', baseURL)
+      const res = await fetch(`${baseURL}/api/credit/allocate/${selectedUserId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          credit: Number(credit),
+          reason
+        })
+      })
 
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || 'Failed to credit  user')
+      }
 
+      const data = await res.json()
+
+      return data
+    },
+    onSuccess: (data) => {
+      toast.success(data.message)
+      console.log(' Credit allocation details:', data.CreditAllocationDetails)
+      setSelectedUserId('')
+      setReason('')
+      setSelectedUser('')
+      setCredit('')
+      queryClient.invalidateQueries(['users'])
+    },
+    onError: (error) => {
+      toast.error(error.message)
+    }
+  })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!selectedUserId || !credit || !reason) {
+      toast.error('All fields are required')
+      return
+    }
+
+    creditAllocationMutation.mutate({ reason, credit, selectedUserId })
   }
 
   return (
@@ -147,7 +192,7 @@ const CreditAllocation = () => {
           </div>
           <div className="w-3/6 shadow-md p-4 rounded-lg ">
             <h2 className="text-2xl font-bold"> Credits Allocation </h2>
-            <form  onSubmit={handleSubmit} >
+            <form onSubmit={handleSubmit}>
               <div className="mt-6   ">
                 <h2 className="text-xl font-semibold  mb-1 "> Select User </h2>
                 <Select
@@ -225,14 +270,12 @@ const CreditAllocation = () => {
               </div>
               <button
                 type="submit"
-                // disabled={mutation.isLoading}
+                disabled={creditAllocationMutation?.isLoading}
                 className={`cursor-pointer mt-4 font-semibold bg-[#0D47A1] text-[#E3F2FD] px-9 py-3 text-lg rounded-lg
                   `}
               >
-                {/* {mutation.isPending ? 'Applying...' : 'Apply Adjustment'} */}
-                Apply Adjustment
+                {creditAllocationMutation?.isPending ? 'Applying...' : 'Apply Adjustment'}
               </button>
-
             </form>
           </div>
         </div>

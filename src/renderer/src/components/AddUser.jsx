@@ -44,7 +44,7 @@ const AddUser = () => {
     },
     onSuccess: (data) => {
       toast.success(data.message)
-      console.log('login user:', data.user)
+      console.log(' user:', data.user)
       setUsername('')
       setEmail('')
       setPassword('')

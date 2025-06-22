@@ -4,42 +4,62 @@ import getBackendURL from '../components/GetBackendURL.jsx'
 import { useInfiniteQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { useSelector } from 'react-redux'
-import Select from 'react-select'
 
 const CreditHistory = () => {
-  const [isLoading, setIsloading] = useState(false)
+  const token = localStorage.getItem('token')
+  const [baseURL, setBaseURL] = useState('')
 
-  const histories = [
-    {
-      id: 1,
-      generatedBy: 'Adesin Paul',
-      user: 'Client1',
-      creditAmount: '400',
-      created_at: '22-06-2025 12:00 pm'
-    },
-    {
-      id: 2,
-      generatedBy: 'Adesin Paul',
-      user: 'Client1',
-      creditAmount: '40',
-      created_at: '22-06-2025 12:00 pm'
-    },
-    {
-      id: 3,
-      generatedBy: 'Adesin Paul',
-      user: 'Client1',
-      creditAmount: '100',
-      created_at: '22-06-2025 12:00 pm'
-    },
-    {
-      id: 4,
-      generatedBy: 'Adesin Paul',
-      user: 'Client1',
-      creditAmount: '500',
-      created_at: '22-06-2025 12:00 pm'
+  useEffect(() => {
+    const loadURL = async () => {
+      const url = await getBackendURL()
+      setBaseURL(url)
+    }
+    loadURL()
+  }, [])
+
+  const fetchHistory = async ({ pageParam = 1 }) => {
+    const res = await fetch(`${baseURL}/api/credit/history?page=${pageParam}&limit=16`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!res.ok) {
+      throw new Error('Failed to fetch history')
+    }
+    return res.json()
+  }
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['history'],
+    queryFn: fetchHistory,
+    getNextPageParam: (lastPage, pages) => (lastPage.hasNextPage ? pages.length + 1 : undefined),
+    enabled: !!baseURL
+  })
+
+  const histories = data?.pages.flatMap((page) => page.data) || []
+  console.log(histories)
+
+  function formatToReadable(dateString) {
+    const date = new Date(dateString)
+    const options = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     }
 
-  ]
+    const [month, day, year] = date.toLocaleDateString('en-US').split('/')
+    const time = date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+
+    return `${year}-${month}-${day} ${time}`
+  }
 
   return (
     <>
@@ -65,32 +85,37 @@ const CreditHistory = () => {
                       index === histories?.length - 1 ? 'border-b-0' : ''
                     }`}
                   >
-                    <td className="py-2 pr-4 sm:py-4  font-medium">{history?.generatedBy}</td>
-                    <td className="py-2 px-4 sm:py-4  font-medium">{history?.user}</td>
-                    <td className="py-2 px-4  sm:py-4">{history?.creditAmount}</td>
+                    <td className="py-2 pr-4 sm:py-4  font-medium">
+                      {history?.allocatedBy?.email}
+                    </td>
+                    <td className="py-2 px-4 sm:py-4  font-medium">
+                      {history?.allocatedTo?.email}
+                    </td>
+                    <td className="py-2 px-4  sm:py-4">{history?.credits_added}</td>
 
-                    <td className="py-2 px-4 sm:py-4 font-medium">{history?.created_at}</td>
+                    <td className="py-2 px-4 sm:py-4 font-medium">
+                      {formatToReadable(history?.created_at)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <div className="text-[#0D47A1] font-semibold text-lg">No Activities Found.</div>
+          <div className="text-[#0D47A1] font-semibold text-lg">No history Found.</div>
         )}
 
-
-         {/* {hasNextPage && (
-                <div className="flex block justify-center items-center">
-                  <button
-                    className="rounded py-2 px-6 text-2xl bg-[#0D47A1] mb-4 mt-12 text-[#E3F2FD] cursor-pointer"
-                    onClick={() => fetchNextPage()}
-                    disabled={isFetchingNextPage}
-                  >
-                    {isFetchingNextPage ? 'Loading more...' : 'Load more'}
-                  </button>
-                </div>
-              )} */}
+        {hasNextPage && (
+          <div className="flex block justify-center items-center">
+            <button
+              className="rounded py-2 px-6 text-2xl bg-[#0D47A1] mb-4 mt-12 text-[#E3F2FD] cursor-pointer"
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? 'Loading more...' : 'Load more'}
+            </button>
+          </div>
+        )}
       </div>
     </>
   )
