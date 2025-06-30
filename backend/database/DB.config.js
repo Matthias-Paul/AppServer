@@ -15,8 +15,8 @@ export const sequelize = new Sequelize({
 
 // const deleteTable = async () => {
 //   try {
-//     await sequelize.getQueryInterface().dropTable('church_setting')
-//     console.log('churchSettings table deleted successfully.')
+//     await sequelize.getQueryInterface().dropTable('media')
+//     console.log('media table deleted successfully.')
 //   } catch (err) {
 //     console.error('Failed to delete table:', err)
 //   }

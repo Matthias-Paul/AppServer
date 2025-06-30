@@ -16,6 +16,10 @@ export async function up(queryInterface, Sequelize) {
       type: Sequelize.TEXT,
       allowNull: true,
     },
+    minister_name: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
     file_path: {
       type: Sequelize.STRING(500),
       allowNull: false,

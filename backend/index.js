@@ -8,6 +8,8 @@ import { getNetworkInfo } from './utils/getLocalIP.js'
 import { testDbConnection } from './database/DB.config.js'
 import authRoute from './routes/auth.route.js'
 import adminRoute from './routes/admin.route.js'
+import mobileRoute from './routes/mobile.route.js'
+
 import multer from 'multer'
 
 dotenv.config()
@@ -27,6 +29,9 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api', authRoute)
 app.use('/api', adminRoute)
+app.use('/api', mobileRoute)
+
+
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

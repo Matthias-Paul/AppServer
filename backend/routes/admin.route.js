@@ -24,6 +24,7 @@ import {
   addExistingMediaToService,
   allocateCredits,
   creditHistory,
+  creditUsage,
 } from '../controllers/admin.js'
 import { registerValidation } from '../middlewares/express-validation.js'
 
@@ -47,6 +48,8 @@ router.post('/media', verifyUser, electronUpload.single('file'), createMedia)
 router.get('/media', getAllMedia)
 router.get('/connection/status', getConnectionStatus);
 router.get('/credit/history', verifyUser, creditHistory);
+router.get('/credit/usage', verifyUser, creditUsage);
+
 router.put('/services/:id/editService', verifyUser, upload.single('banner'), editService)
 router.post('/services/:id/addMedia', verifyUser, electronUpload.single('file'), addMedia)
 router.get('/services/:id', getServices)

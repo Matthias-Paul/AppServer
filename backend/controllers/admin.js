@@ -4,6 +4,9 @@ import User from '../models/users.model.js'
 import Service from '../models/service.model.js'
 import Media from '../models/media.model.js'
 import ServiceMedia from '../models/service-media.model.js'
+import ffmpeg from 'fluent-ffmpeg'
+import ffmpegPath from 'ffmpeg-static'
+ffmpeg.setFfmpegPath(ffmpegPath)
 import ChurchSetting from '../models/ChurchSettings.model.js'
 import Transaction from '../models/transaction.model.js'
 import CreditAllocation from '../models/creditsAllocation.model.js'
@@ -13,6 +16,7 @@ import { validationResult, matchedData } from 'express-validator'
 import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { getMediaDuration } from '../utils/getMediaDuration.js'
 
 export const getUsers = async (req, res) => {
   try {
@@ -149,12 +153,13 @@ export const addMedia = async (req, res) => {
       file_full_path,
       is_upload,
       file_name,
+      minister_name,
       file_size
     } = req.body
 
     let finalFilePath = ''
     let finalFileSize = 0
-
+    let duration = ""
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
       const ext = path.extname(file_full_path).toLowerCase()
@@ -168,6 +173,9 @@ export const addMedia = async (req, res) => {
         fs.mkdirSync(destinationFolder, { recursive: true })
       }
 
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
       fs.copyFileSync(file_full_path, destinationPath)
 
       finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
@@ -179,11 +187,17 @@ export const addMedia = async (req, res) => {
       const mediaType = file_type + 's'
       finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
       finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     } else {
       return res.status(400).json({
         success: false,
@@ -197,8 +211,10 @@ export const addMedia = async (req, res) => {
       file_full_path,
       file_path: finalFilePath,
       file_type,
+      minister_name,
       file_size: finalFileSize || file_size,
-      price
+      price,
+      duration,
     })
 
     await ServiceMedia.create({
@@ -321,11 +337,13 @@ export const createMedia = async (req, res) => {
       file_full_path,
       is_upload,
       file_name,
+      minister_name,
       file_size
     } = req.body
 
     let finalFilePath = ''
     let finalFileSize = 0
+    let duration = ''
 
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
@@ -335,6 +353,10 @@ export const createMedia = async (req, res) => {
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
       const destinationPath = path.join(destinationFolder, uniqueFileName)
+
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
 
       if (!fs.existsSync(destinationFolder)) {
         fs.mkdirSync(destinationFolder, { recursive: true })
@@ -351,17 +373,24 @@ export const createMedia = async (req, res) => {
       const mediaType = file_type + 's'
       finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
       finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     } else {
       return res.status(400).json({
         success: false,
         message: 'No file provided.'
       })
     }
+    console.log('duration', duration)
 
     const media = await Media.create({
       title,
@@ -369,6 +398,8 @@ export const createMedia = async (req, res) => {
       file_full_path,
       file_path: finalFilePath,
       file_type,
+      duration,
+      minister_name,
       file_size: finalFileSize || file_size,
       price
     })
@@ -577,7 +608,8 @@ export const updateMedia = async (req, res) => {
       file_full_path,
       is_upload,
       file_name,
-      file_size
+      file_size,
+      minister_name,
     } = req.body
 
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
@@ -594,7 +626,7 @@ export const updateMedia = async (req, res) => {
         message: 'Media not found'
       })
     }
-
+    let duration = ''
     let finalFilePath = media.file_path
     let finalFileSize = media.file_size
     let finalFileType = media.file_type
@@ -611,7 +643,7 @@ export const updateMedia = async (req, res) => {
 
       console.log('Destination folder:', destinationFolder)
       console.log('Destination path:', destinationPath)
-
+      
       if (!fs.existsSync(destinationFolder)) {
         fs.mkdirSync(destinationFolder, { recursive: true })
       }
@@ -619,7 +651,9 @@ export const updateMedia = async (req, res) => {
       fs.copyFileSync(file_full_path, destinationPath)
 
       console.log('File copied successfully!')
-
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
       finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
       finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
       finalFileType = file_type
@@ -628,21 +662,29 @@ export const updateMedia = async (req, res) => {
       finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
       finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
       finalFileType = file_type
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     } else if (!is_upload && file_full_path) {
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
       finalFileType = file_type
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
     }
 
     if (title) media.title = title
     if (description !== undefined) media.description = description
     if (price !== undefined) media.price = price
+    if (minister_name !== undefined) media.minister_name = minister_name
 
     if (file_full_path || req.file || !is_upload) {
       media.file_full_path = file_full_path
       media.file_path = finalFilePath
       media.file_size = finalFileSize
       media.file_type = finalFileType
+      media.duration = duration
     }
 
     await media.save()
@@ -801,7 +843,7 @@ export const editService = async (req, res) => {
 
     if (description) serviceToEdit.description = description
     if (theme) serviceToEdit.theme = theme
-    if (typeof isActive === 'boolean') serviceToEdit.is_active = isActive
+    serviceToEdit.is_active = isActive
     if (bannerPath) serviceToEdit.banner_image = bannerPath
 
     await serviceToEdit.save()
@@ -880,8 +922,6 @@ export const getConnectionStatus = async (req, res) => {
 }
 
 export const addExistingMediaToService = async (req, res) => {
-
-
   try {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
@@ -946,60 +986,59 @@ export const allocateCredits = async (req, res) => {
     if (!req.user || !req.user.id || req.user.role === 'client') {
       return res.status(403).json({
         success: false,
-        message: 'Unauthorized access',
-      });
+        message: 'Unauthorized access'
+      })
     }
 
-    const { id } = req.params;
-    const { credit, reason } = req.body;
+    const { id } = req.params
+    const { credit, reason } = req.body
 
     if (!id || !credit || !reason) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
-      });
+        message: 'All fields are required'
+      })
     }
 
-    const creditToAdd = parseFloat(credit);
+    const creditToAdd = parseFloat(credit)
     if (isNaN(creditToAdd) || creditToAdd <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Credit must be a valid positive number',
-      });
+        message: 'Credit must be a valid positive number'
+      })
     }
 
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(id)
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found',
-      });
+        message: 'User not found'
+      })
     }
 
-    user.credits = (user.credits || 0) + creditToAdd;
-    await user.save();
+    user.credits = (user.credits || 0) + creditToAdd
+    await user.save()
 
     const CreditAllocationDetails = await CreditAllocation.create({
       user_id: id,
       credits_added: creditToAdd,
       reason,
-      generatedBy: req.user.id,
-    });
+      generatedBy: req.user.id
+    })
 
     return res.status(201).json({
       success: true,
       CreditAllocationDetails,
-      message: 'Credit allocated to user successfully',
-    });
+      message: 'Credit allocated to user successfully'
+    })
   } catch (error) {
-    console.error(error);
+    console.error(error)
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
-    });
+      message: 'Internal server error'
+    })
   }
-};
-
+}
 
 export const creditHistory = async (req, res) => {
   const page = Number(req.query.page) || 1
@@ -1010,7 +1049,7 @@ export const creditHistory = async (req, res) => {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: 'Unauthorized access',
+        message: 'Unauthorized access'
       })
     }
 
@@ -1022,14 +1061,14 @@ export const creditHistory = async (req, res) => {
         {
           model: User,
           as: 'allocatedTo',
-          attributes: ['id', 'email'],
+          attributes: ['id', 'email']
         },
         {
           model: User,
           as: 'allocatedBy',
-          attributes: ['id', 'email'],
-        },
-      ],
+          attributes: ['id', 'email']
+        }
+      ]
     })
 
     const totalPages = Math.ceil(count / limit)
@@ -1038,16 +1077,67 @@ export const creditHistory = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: rows,
-      hasNextPage,
+      hasNextPage
     })
   } catch (error) {
     console.error(error)
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: 'Internal server error'
     })
   }
 }
 
+
+export const creditUsage = async (req, res) => {
+
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    const count = await Transaction.count();
+
+    const transactions = await Transaction.findAll({
+      limit,
+      offset,
+      order: [['transaction_date', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ['id', 'username', 'email']
+        },
+        {
+          model: Media,
+          as: "media",
+          attributes: ['id', 'title', 'file_type', 'price']
+        }
+      ]
+    });
+
+    const totalPages = Math.ceil(count / limit);
+    const hasNextPage = page < totalPages;
+
+    return res.status(200).json({
+      success: true,
+      transactions,
+      hasNextPage
+    });
+  } catch (error) {
+    console.error('creditUsage error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    });
+  }
+};
 
 

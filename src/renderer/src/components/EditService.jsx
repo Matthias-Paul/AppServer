@@ -12,7 +12,7 @@ const EditService = () => {
   const [name, setName] = useState('')
   const [theme, setTheme] = useState('')
   const [description, setDescription] = useState('')
-  const [isActive, setIsActive] = useState(true)
+  const [isActive, setIsActive] = useState("1")
 
   const validateImageFile = (file) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
@@ -87,7 +87,7 @@ const EditService = () => {
       setName('')
       setTheme('')
       setDescription('')
-      setIsActive(true)
+      setIsActive("1")
       setFileName('')
       document.getElementById('file-upload').value = ''
       navigate(`/admin/service`)
@@ -213,9 +213,9 @@ const EditService = () => {
                   <input
                     type="radio"
                     name="is_active"
-                    value="true"
-                    checked={isActive === true}
-                    onChange={() => setIsActive(true)}
+                    value="1"
+                    checked={isActive === "1"}
+                    onChange={() => setIsActive("1")}
                     className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
                   />
                   <span className="text-md  xl:text-2xl ">Yes</span>
@@ -225,9 +225,9 @@ const EditService = () => {
                   <input
                     type="radio"
                     name="is_active"
-                    value="false"
-                    checked={isActive === false}
-                    onChange={() => setIsActive(false)}
+                    value="0"
+                    checked={isActive === "0"}
+                    onChange={() => setIsActive("0")}
                     className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
                   />
                   <span className="text-md xl:text-2xl ">No</span>

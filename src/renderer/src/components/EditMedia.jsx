@@ -1,22 +1,22 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { FaArrowLeft } from 'react-icons/fa'
 import { useState, useEffect } from 'react'
-import { useMutation, useQuery  } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import getBackendURL from './GetBackendURL'
 import toast from 'react-hot-toast'
-
-
 
 const EditMedia = () => {
   const navigate = useNavigate()
   const { id } = useParams()
-const [mediaDetails, setMediaDetails] = useState("")
+  const [mediaDetails, setMediaDetails] = useState('')
   const [isUploadFile, setIsUploadFile] = useState(true)
   const [mediaType, setMediaType] = useState('')
   const [fileName, setFileName] = useState('')
-  const [description, setDescription] = useState("")
-  const [title, setTitle] = useState("")
-  const [price, setPrice] = useState("")
+  const [description, setDescription] = useState('')
+  const [title, setTitle] = useState('')
+  const [price, setPrice] = useState('')
+  const [minister_name, setMinister_name] = useState('')
+
   const [filePath, setFilePath] = useState('')
 
   const handleBrowse = async () => {
@@ -52,9 +52,6 @@ const [mediaDetails, setMediaDetails] = useState("")
   console.log('Selected file:', filePath)
   console.log('Media type:', mediaType)
 
-
-
-
   const fetchMediaDetails = async () => {
     const baseURL = await getBackendURL()
     console.log('base url', baseURL)
@@ -79,12 +76,9 @@ const [mediaDetails, setMediaDetails] = useState("")
       setTitle(data?.mediaDetails?.title || '')
       setDescription(data?.mediaDetails?.description || '')
       setPrice(data?.mediaDetails?.price || '')
-
+      setMinister_name(data?.mediaDetails?.minister_name)
     }
   }, [data])
-
-
-
 
   const updateMedia = async (formData) => {
     const token = localStorage.getItem('token')
@@ -126,8 +120,8 @@ const [mediaDetails, setMediaDetails] = useState("")
       setDescription('')
       setFileName('')
       setFilePath('')
+      setMinister_name('')
       setTimeout(() => navigate('/admin/media'), 1000)
-
     },
     onError: (error) => {
       toast.error(error.message || 'Error while updating')
@@ -143,37 +137,37 @@ const [mediaDetails, setMediaDetails] = useState("")
     formData.append('description', description)
     formData.append('price', price)
     formData.append('is_upload', isUploadFile)
-
+    formData.append('minister_name', minister_name)
 
     if (filePath) {
-  try {
-    const stats = window.electronAPI.getFileStats(filePath)
-    if (stats) {
-      const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
-      formData.append('file_size', sizeInMB)
-    }
+      try {
+        const stats = window.electronAPI.getFileStats(filePath)
+        if (stats) {
+          const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
+          formData.append('file_size', sizeInMB)
+        }
 
-    if (isUploadFile && window.electronAPI.readFileAsBlob) {
-      const { buffer, mimeType } = await window.electronAPI.readFileAsBlob(filePath)
-      const blob = new Blob([new Uint8Array(buffer)], {
-        type: mimeType || 'application/octet-stream'
-      })
+        if (isUploadFile && window.electronAPI.readFileAsBlob) {
+          const { buffer, mimeType } = await window.electronAPI.readFileAsBlob(filePath)
+          const blob = new Blob([new Uint8Array(buffer)], {
+            type: mimeType || 'application/octet-stream'
+          })
 
-      const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
-      formData.append('file', blob, fileNameOnly)
-      formData.append('file_type', mediaType)
-      formData.append('file_full_path', filePath)
+          const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
+          formData.append('file', blob, fileNameOnly)
+          formData.append('file_type', mediaType)
+          formData.append('file_full_path', filePath)
+        }
+      } catch (err) {
+        toast.error('Failed to process selected file')
+        console.error(err)
+        return
+      }
     }
-  } catch (err) {
-    toast.error('Failed to process selected file')
-    console.error(err)
-    return
-  }
-}
 
     mutation.mutate(formData)
   }
-  console.log("isUploadFile", isUploadFile)
+  console.log('isUploadFile', isUploadFile)
 
   return (
     <>
@@ -251,6 +245,20 @@ const [mediaDetails, setMediaDetails] = useState("")
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="border resize-none focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                  type="text"
+                />
+              </div>
+
+               <div className="mb-6   mt-4 ">
+                <label className="block text-[#0D47A1]  text-lg  font-semibold mb-1 ">
+                  {' '}
+                  Minister Name (Optional){' '}
+                </label>
+                <input
+                  placeholder="Add minister name"
+                  value={minister_name}
+                  onChange={(e) => setMinister_name(e.target.value)}
+                  className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                   type="text"
                 />
               </div>

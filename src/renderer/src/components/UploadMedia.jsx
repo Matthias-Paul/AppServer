@@ -17,6 +17,7 @@ const UploadMedia = () => {
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
   const [filePath, setFilePath] = useState('')
+  const [minister_name, setMinister_name] = useState('')
 
   const handleBrowse = async () => {
     if (!window.electronAPI) {
@@ -91,6 +92,7 @@ const UploadMedia = () => {
       setDescription('')
       setFileName('')
       setFilePath('')
+      setMinister_name("")
       setTimeout(() => navigate('/admin/media'), 1000)
 
     },
@@ -110,6 +112,7 @@ const UploadMedia = () => {
     formData.append('file_type', mediaType)
     formData.append('file_full_path', filePath)
     formData.append('is_upload', isUploadFile)
+    formData.append('minister_name', minister_name)
 
     try {
       const stats = window.electronAPI.getFileStats(filePath)
@@ -219,6 +222,21 @@ const UploadMedia = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="border resize-none focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                  type="text"
+                />
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-[#0D47A1]  text-lg font-semibold  ">
+                  {' '}
+                  Minister Name (Optional){' '}
+                </label>
+                
+                <input
+                  placeholder="Add minister name"
+                  value={minister_name}
+                  onChange={(e) => setMinister_name(e.target.value)}
+                  className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                   type="text"
                 />
               </div>

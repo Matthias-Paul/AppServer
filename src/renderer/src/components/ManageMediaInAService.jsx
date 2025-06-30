@@ -18,6 +18,8 @@ const ManageMediaInAService = () => {
   const [mediaType, setMediaType] = useState('image')
   const [fileName, setFileName] = useState('')
   const [description, setDescription] = useState('')
+  const [minister_name, setMinister_name] = useState('')
+
   const [baseURL, setBaseURL] = useState('')
 
   const [title, setTitle] = useState('')
@@ -125,6 +127,7 @@ const ManageMediaInAService = () => {
       setDescription('')
       setFileName('')
       setFilePath('')
+      setMinister_name('')
     },
     onError: (error) => {
       toast.error(error.message || 'Error while uploading')
@@ -142,6 +145,7 @@ const ManageMediaInAService = () => {
     formData.append('file_type', mediaType)
     formData.append('file_full_path', filePath)
     formData.append('is_upload', isUploadFile)
+    formData.append('minister_name', minister_name)
 
     const stats = window.electronAPI.getFileStats(filePath)
     if (stats) {
@@ -315,6 +319,19 @@ const ManageMediaInAService = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="border resize-none focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                  type="text"
+                />
+              </div>
+              <div className="mb-6   mt-4 ">
+                <label className="block text-[#0D47A1]  text-lg  font-semibold mb-1 ">
+                  {' '}
+                  Minister Name (Optional){' '}
+                </label>
+                <input
+                  placeholder="Add minister name"
+                  value={minister_name}
+                  onChange={(e) => setMinister_name(e.target.value)}
+                  className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
                   type="text"
                 />
               </div>
