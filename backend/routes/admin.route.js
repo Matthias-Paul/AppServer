@@ -46,7 +46,7 @@ router.put(
 router.post('/services', verifyUser, upload.single('banner'), createService)
 router.post('/media', verifyUser, electronUpload.single('file'), createMedia)
 router.get('/media', getAllMedia)
-router.get('/connection/status', getConnectionStatus);
+router.post('/connection/status', getConnectionStatus);
 router.get('/credit/history', verifyUser, creditHistory);
 router.get('/credit/usage', verifyUser, creditUsage);
 

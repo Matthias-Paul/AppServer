@@ -114,6 +114,7 @@ export const login = async (req, res, next) => {
         name: user.username,
         email: user.email,
         role: user.role,
+        credits: user.credits,
         createdAt: user.created_at,
         updatedAt: user.updated_at
       },
@@ -130,6 +131,17 @@ export const login = async (req, res, next) => {
 }
 
 export const getServicesWithMediaCounts = async (req, res) => {
+
+
+    if (!req.user || !req.user.id ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+
+
   try {
     const page = Number(req.query.page) || 1
     const limit = Number(req.query.limit) || 10
@@ -190,8 +202,28 @@ export const getServicesWithMediaCounts = async (req, res) => {
 }
 
 export const getServiceWithMedia = async (req, res) => {
+
+   if (!req.user || !req.user.id ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+  const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      statusCode: 400,
+      success: false,
+      message: errors.array()[0].msg
+    })
+  }
+
+    const { serviceId } = matchedData(req)
+   
+
   try {
-    const { serviceId } = req.params
+   
 
     const service = await Service.findByPk(serviceId, {
       include: [
@@ -278,15 +310,29 @@ export const getServiceWithMedia = async (req, res) => {
 }
 
 export const downloadMedia = async (req, res) => {
-  try {
-    const { mediaId, userId } = req.params
 
-    if (!userId || !mediaId) {
-      return res.status(400).json({
+   if (!req.user || !req.user.id ) {
+      return res.status(403).json({
         success: false,
-        message: 'Both mediaId and userId are required.'
+        message: 'Unauthorized access'
       })
     }
+     const errors = validationResult(req)
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      statusCode: 400,
+      success: false,
+      message: errors.array()[0].msg
+    })
+  }
+
+
+        const { mediaId} = matchedData(req)
+        const userId = req.user.id
+
+  try {
+    
 
     const media = await Media.findByPk(mediaId)
     if (!media) {
@@ -363,7 +409,16 @@ export const creditHistory = async (req, res) => {
   const page = Number(req.query.page) || 1
   const limit = Number(req.query.limit) || 10
   const offset = (page - 1) * limit
-  const { userId } = req.params
+
+   if (!req.user || !req.user.id ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+      const userId  = req.user.id
+
   try {
     const { rows, count } = await CreditAllocation.findAndCountAll({
       where: { user_id: userId },
@@ -400,7 +455,16 @@ export const downloadHistory = async (req, res) => {
   const page = Number(req.query.page) || 1
   const limit = Number(req.query.limit) || 10
   const offset = (page - 1) * limit
-  const { userId } = req.params
+
+  
+     if (!req.user || !req.user.id ) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+      const userId  = req.user.id
 
   try {
     const { rows, count } = await MediaPurchase.findAndCountAll({

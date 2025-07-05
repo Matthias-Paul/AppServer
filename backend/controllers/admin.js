@@ -906,11 +906,29 @@ export const removeMediaFromService = async (req, res) => {
 export const getConnectionStatus = async (req, res) => {
   try {
     const setting = await ChurchSetting.findByPk(1)
+    const { username } = req.body
+    if(!username){
+       return res.status(400).json({
+      success: false,
+      message: 'Username is required'
+    })
+    }
 
+    const user = await User.findOne({where: { username}})
+    let account_exist =""
+
+    if(!user){
+      account_exist = "no"
+    }
+    if(user){
+        account_exist = "yes"
+
+    }
     return res.status(200).json({
       status: 'Connected',
       logo: setting?.church_logo_file_path || '',
-      church_name: setting?.church_name || 'Unknown'
+      church_name: setting?.church_name || 'Unknown',
+      account_exist
     })
   } catch (error) {
     console.error(error)
