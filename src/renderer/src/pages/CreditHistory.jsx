@@ -18,7 +18,7 @@ const CreditHistory = () => {
   }, [])
 
   const fetchHistory = async ({ pageParam = 1 }) => {
-    const res = await fetch(`${baseURL}/api/credit/history?page=${pageParam}&limit=16`, {
+    const res = await fetch(`${baseURL}/api/credit/history?page=${pageParam}&limit=20`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`

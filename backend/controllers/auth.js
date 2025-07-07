@@ -4,7 +4,7 @@ import { validationResult, matchedData } from "express-validator";
 import dotenv from "dotenv";
 import bcryptjs from "bcryptjs";
 import generateToken from "../utils/generateToken.js"
-
+import UserActivity from "../models/userActivities.model.js"
 
 dotenv.config();
 
@@ -55,6 +55,11 @@ export const registerUser = async (req, res, next) => {
     const token = await generateToken(user.id, user.role, res); 
         console.log(token)
   
+    await UserActivity.create({
+      user_id:user.id,
+      action: 'New user added to system',
+      detail: `${user.username} has been added to the system`
+    })
     res.status(201).json({
       success: true,
       user: userWithoutPassword,

@@ -82,7 +82,7 @@ const MediaManagement = () => {
 
   const fetchMedias = async ({ pageParam = 1 }) => {
     const res = await fetch(
-      `${baseURL}/api/media?${searchParams.toString()}&page=${pageParam}&limit=16`,
+      `${baseURL}/api/media?${searchParams.toString()}&page=${pageParam}&limit=20`,
       {
         method: 'GET',
         headers: {

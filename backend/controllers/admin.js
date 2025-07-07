@@ -17,6 +17,10 @@ import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { getMediaDuration } from '../utils/getMediaDuration.js'
+import UserActivity from "../models/userActivities.model.js"
+
+
+
 
 export const getUsers = async (req, res) => {
   try {
@@ -557,6 +561,12 @@ export const addUser = async (req, res) => {
 
     const { password_hash: _, ...userWithoutPassword } = user.get({ plain: true })
 
+     await UserActivity.create({
+      user_id:user.id,
+      action: 'New user added to system',
+      detail: `${user.username} has been added to the system`
+    })
+
     res.status(201).json({
       success: true,
       user: userWithoutPassword,
@@ -1043,6 +1053,12 @@ export const allocateCredits = async (req, res) => {
       reason,
       generatedBy: req.user.id
     })
+    await UserActivity.create({
+      user_id:id,
+      action: 'Credit Allocation',
+      detail: `${creditToAdd} credits was allocated to ${user.username}  `
+    })
+
 
     return res.status(201).json({
       success: true,
@@ -1157,5 +1173,95 @@ export const creditUsage = async (req, res) => {
     });
   }
 };
+
+
+
+export const getRecentActivities = async (req, res) => {
+  if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Unauthorized access',
+    });
+  }
+
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const { count, rows } = await UserActivity.findAndCountAll({
+      where: {
+        created_at: {
+          [Op.gte]: twentyFourHoursAgo,
+        },
+      },
+      order: [['created_at', 'DESC']],
+      limit,
+      offset,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'email', 'username'],
+        },
+      ],
+    });
+
+    const totalPages = Math.ceil(count / limit);
+    const hasNextPage = page < totalPages;
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      hasNextPage,
+    });
+  } catch (error) {
+    console.error('getRecentActivities error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+
+export const getDashboardDetails = async (req, res) => {
+  if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Unauthorized access',
+    });
+  }
+
+  try {
+    const totalUsers = await User.count();
+    const totalMedia = await Media.count();
+    const totalActiveService = await Service.count({ where: { is_active: 1 } });
+    const totalCreditsAllocated = await CreditAllocation.sum('credits_added');
+
+    return res.status(200).json({
+      success: true,
+      totalUsers,
+      totalMedia,
+      totalActiveService,
+      totalCreditsAllocated: totalCreditsAllocated || 0,
+    });
+  } catch (error) {
+    console.error('getDashboardDetails error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+
+
+
+
+
+
 
 

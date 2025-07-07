@@ -45,7 +45,7 @@ const UserManagement = () => {
     const baseURL = await getBackendURL()
     console.log('base url', baseURL)
     const res = await fetch(
-      `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=16`,
+      `${baseURL}/api/users?${searchParams.toString()}&page=${pageParam}&limit=20`,
       {
         method: 'GET',
         headers: {
@@ -126,7 +126,7 @@ const UserManagement = () => {
           {hasNextPage && (
             <div className="flex justify-center items-center">
               <button
-                className="rounded py-2 px-6 bg-[#0D47A1] my-4 text-2xl text-[#E3F2FD] cursor-pointer"
+                className="rounded py-2 px-6 text-2xl  bg-[#0D47A1] my-4 text-2xl text-[#E3F2FD] cursor-pointer"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
               >

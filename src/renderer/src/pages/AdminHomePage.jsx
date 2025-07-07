@@ -1,38 +1,80 @@
 import { useState, useEffect } from 'react'
 import adminPic from '../assets/adminPics.png'
 import DashboardTable from '../components/DashboardTable'
+import { useInfiniteQuery, useQueryClient, useMutation, useQuery} from '@tanstack/react-query'
+import getBackendURL from '../components/GetBackendURL.jsx'
+
 
 const AdminHomePage = () => {
-  const activities = [
-    {
-      id: '1333223',
-      time: '23:12',
-      email: 'test@gmail.com',
-      action: 'media download',
-      details: 'Sunday worship audio -50 credits'
-    },
-    {
-      id: '1223e33',
-      time: '23:12',
-      email: 'test@gmail.com',
-      action: 'media download',
-      details: 'Sunday worship audio -50 credits'
-    },
-    {
-      id: '1w33223',
-      time: '23:12',
-      email: 'test@gmail.com',
-      action: 'media download',
-      details: 'Sunday worship audio -50 credits'
-    },
-    {
-      id: '1223sw',
-      time: '23:12',
-      email: 'test@gmail.com',
-      action: 'media download',
-      details: 'Sunday worship audio -50 credits'
+
+
+
+const token = localStorage.getItem('token')
+  const [baseURL, setBaseURL] = useState('')
+
+  useEffect(() => {
+    const loadURL = async () => {
+      const url = await getBackendURL()
+      setBaseURL(url)
     }
-  ]
+    loadURL()
+  }, [])
+
+  const fetchActivities = async ({ pageParam = 1 }) => {
+    const res = await fetch(`${baseURL}/api/recent/activities?page=${pageParam}&limit=20`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    if (!res.ok) {
+      throw new Error('Failed to fetch activities')
+    }
+    return res.json()
+  }
+
+  const { data:dashBoardTable , fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+    queryKey: ['activities'],
+    queryFn: fetchActivities,
+    getNextPageParam: (lastPage, pages) => (lastPage.hasNextPage ? pages.length + 1 : undefined),
+    enabled: !!baseURL
+  })
+
+  const activities = dashBoardTable?.pages.flatMap((page) => page.data) || []
+  console.log(activities)
+
+
+const fetchDashBoardDetail = async()=>{
+
+  const res = await fetch(`${baseURL}/api/dashboard/Details`,{
+      method:"GET",
+      headers:{
+        Authorization:`Bearer ${token}`
+      },
+  })
+    if(!res.ok){
+      throw new Error("Error while fetching dashboard details");
+    }
+    return res.json()
+
+}
+
+  const {data } = useQuery({
+    queryKey:["dashboardDetails"],
+    queryFn:fetchDashBoardDetail
+  })
+
+  console.log(data)
+
+
+
+
+
+
+
+
+
+
 
   const [currentDate, setCurrentDate] = useState(() =>
     new Date().toLocaleDateString('en-US', {
@@ -88,19 +130,19 @@ const AdminHomePage = () => {
 
         <div className="flex flex-wrap gap-y-5 gap-x-5  items-center justify-start text-[#0D47A1] ">
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">1,247</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalUsers || "--"}</h1>
             <h5 className="text-[20px] ">Total Users</h5>
           </div>
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">₦1,247</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalCreditsAllocated || "--"}</h1>
             <h5 className="text-[20px] ">Credits Sold</h5>
           </div>
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">1,247</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalActiveService || "--"}</h1>
             <h5 className="text-[20px] ">Actives Services</h5>
           </div>
           <div className="flex flex-col items-center text-center  justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">1,247</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalMedia || "--"}</h1>
             <h5 className="text-[20px] ">Media Files</h5>
           </div>
         </div>
@@ -108,17 +150,17 @@ const AdminHomePage = () => {
         <h2 className="font-bold text-[30px] mt-4 text-[#0D47A1]    "> Recents Activities</h2>
         <div className="pb-10 mt-4 bg-[#F8F9FA] rounded-lg px-4 py-2  border border-[#E1E7F1]">
           <DashboardTable activities={activities} />
-          {/* {hasNextPage && (
+          {hasNextPage && (
             <div className="flex justify-center items-center">
               <button
-                className="rounded py-1 px-4 bg-[#0D47A1] my-4 text-[#E3F2FD] cursor-pointer"
+                className="rounded py-1 px-4 bg-[#0D47A1] my-4 text-[#E3F2FD] text-2xl  cursor-pointer"
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
               >
                 {isFetchingNextPage ? 'Loading more...' : 'Load more'}
               </button>
             </div>
-          )} */}
+          )}
         </div>
       </div>
     </>

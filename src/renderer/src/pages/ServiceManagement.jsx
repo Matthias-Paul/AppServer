@@ -26,7 +26,7 @@ const ServiceManagement = () => {
 
   const fetchServices = async ({ pageParam = 1 }) => {
     const res = await fetch(
-      `${baseURL}/api/services?${searchParams.toString()}&page=${pageParam}&limit=16`,
+      `${baseURL}/api/services?${searchParams.toString()}&page=${pageParam}&limit=20`,
       {
         method: 'GET',
         headers: {

@@ -10,6 +10,10 @@ import { validationResult, matchedData } from 'express-validator'
 import dotenv from 'dotenv'
 import bcryptjs from 'bcryptjs'
 import generateToken from '../utils/generateToken.js'
+import UserActivity from "../models/userActivities.model.js"
+import { sequelize } from '../database/DB.config.js'
+
+
 
 dotenv.config()
 
@@ -111,7 +115,7 @@ export const login = async (req, res, next) => {
       success: true,
       user: {
         id: user.id,
-        name: user.username,
+        username: user.username,
         email: user.email,
         role: user.role,
         credits: user.credits,
@@ -375,21 +379,32 @@ export const downloadMedia = async (req, res) => {
       })
     }
 
-    user.credits = userCredits - mediaPrice
-    await user.save()
+      const result = await sequelize.transaction(async (t) => {
+        user.credits = userCredits - mediaPrice
+        await user.save({ transaction: t })
 
-    await MediaPurchase.create({
-      user_id: userId,
-      media_id: mediaId,
-      downloaded_at: new Date()
-    })
+        await MediaPurchase.create({
+          user_id: userId,
+          media_id: mediaId,
+          downloaded_at: new Date()
+        }, { transaction: t })
 
-    await Transaction.create({
-      user_id: userId,
-      media_id: mediaId,
-      credits_used: mediaPrice,
-      transaction_date: new Date()
-    })
+        await Transaction.create({
+          user_id: userId,
+          media_id: mediaId,
+          credits_used: mediaPrice,
+          transaction_date: new Date()
+        }, { transaction: t })
+
+        await UserActivity.create({
+          user_id: userId,
+          action: 'Media download',
+          detail: `${media.title} ${media.file_type} - ${media.price} credits`
+        }, { transaction: t })
+
+        return true
+      })
+
 
     return res.status(200).json({
       success: true,
