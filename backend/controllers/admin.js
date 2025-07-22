@@ -17,10 +17,7 @@ import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { getMediaDuration } from '../utils/getMediaDuration.js'
-import UserActivity from "../models/userActivities.model.js"
-
-
-
+import UserActivity from '../models/userActivities.model.js'
 
 export const getUsers = async (req, res) => {
   try {
@@ -77,13 +74,36 @@ export const getUsers = async (req, res) => {
 
 export const createService = async (req, res) => {
   try {
+    if (!req.user || typeof req.user !== 'object' || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
     const { name, theme, description, isActive } = req.body
+
     if (!name) {
       return res.status(400).json({
         success: false,
         message: 'Name is required'
       })
     }
+
+    const setting = await ChurchSetting.findByPk(1)
+
+    if (
+      !setting ||
+      setting.is_updated !== true ||
+      !setting.church_logo_file_path?.trim() ||
+      !setting.church_name?.trim() ||
+      !setting.church_banner_file_path?.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Update church name, logo and banner before creating service'
+      })
+    }
+
     // Handle file upload
     let bannerPath = null
     if (req.file) {
@@ -163,11 +183,14 @@ export const addMedia = async (req, res) => {
 
     let finalFilePath = ''
     let finalFileSize = 0
-    let duration = ""
+    let duration = ''
+    let fileSource = ''
+
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
       const ext = path.extname(file_full_path).toLowerCase()
       const mediaType = file_type + 's'
+      fileSource = 'upload file'
 
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
@@ -194,6 +217,7 @@ export const addMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'upload file'
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
@@ -202,6 +226,7 @@ export const addMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'network file'
     } else {
       return res.status(400).json({
         success: false,
@@ -219,6 +244,7 @@ export const addMedia = async (req, res) => {
       file_size: finalFileSize || file_size,
       price,
       duration,
+      file_source: fileSource
     })
 
     await ServiceMedia.create({
@@ -348,11 +374,13 @@ export const createMedia = async (req, res) => {
     let finalFilePath = ''
     let finalFileSize = 0
     let duration = ''
+    let fileSource = ''
 
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
       const ext = path.extname(file_full_path).toLowerCase()
       const mediaType = file_type + 's'
+      fileSource = 'upload file'
 
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
@@ -380,6 +408,7 @@ export const createMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'upload file'
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
@@ -388,6 +417,7 @@ export const createMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'network file'
     } else {
       return res.status(400).json({
         success: false,
@@ -405,7 +435,8 @@ export const createMedia = async (req, res) => {
       duration,
       minister_name,
       file_size: finalFileSize || file_size,
-      price
+      price,
+      file_source: fileSource
     })
 
     res.status(201).json({ success: true, media })
@@ -561,8 +592,8 @@ export const addUser = async (req, res) => {
 
     const { password_hash: _, ...userWithoutPassword } = user.get({ plain: true })
 
-     await UserActivity.create({
-      user_id:user.id,
+    await UserActivity.create({
+      user_id: user.id,
       action: 'New user added to system',
       detail: `${user.username} has been added to the system`
     })
@@ -619,7 +650,7 @@ export const updateMedia = async (req, res) => {
       is_upload,
       file_name,
       file_size,
-      minister_name,
+      minister_name
     } = req.body
 
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
@@ -640,12 +671,20 @@ export const updateMedia = async (req, res) => {
     let finalFilePath = media.file_path
     let finalFileSize = media.file_size
     let finalFileType = media.file_type
+    let fileSource = ''
+
+    if (is_upload === 'true') {
+      media.file_source = 'upload file'
+    } else if (is_upload === 'false') {
+      media.file_source = 'network file'
+    }
 
     console.log('isUpload', is_upload)
     // Only update file if new one is provided
     if (is_upload && file_full_path) {
       const ext = path.extname(file_full_path).toLowerCase()
       const mediaType = file_type + 's'
+      fileSource = 'upload file'
 
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
@@ -653,7 +692,7 @@ export const updateMedia = async (req, res) => {
 
       console.log('Destination folder:', destinationFolder)
       console.log('Destination path:', destinationPath)
-      
+
       if (!fs.existsSync(destinationFolder)) {
         fs.mkdirSync(destinationFolder, { recursive: true })
       }
@@ -675,6 +714,7 @@ export const updateMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'upload file'
     } else if (!is_upload && file_full_path) {
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
@@ -682,12 +722,16 @@ export const updateMedia = async (req, res) => {
       if (file_type === 'audio' || file_type === 'video') {
         duration = await getMediaDuration(file_full_path)
       }
+      fileSource = 'network file'
     }
 
     if (title) media.title = title
     if (description !== undefined) media.description = description
     if (price !== undefined) media.price = price
     if (minister_name !== undefined) media.minister_name = minister_name
+
+    media.file_source = fileSource || media.file_source
+    console.log('file source', fileSource)
 
     if (file_full_path || req.file || !is_upload) {
       media.file_full_path = file_full_path
@@ -698,6 +742,7 @@ export const updateMedia = async (req, res) => {
     }
 
     await media.save()
+    console.log(media.file_source)
 
     res
       .status(200)
@@ -917,22 +962,21 @@ export const getConnectionStatus = async (req, res) => {
   try {
     const setting = await ChurchSetting.findByPk(1)
     const { username } = req.body
-    if(!username){
-       return res.status(400).json({
-      success: false,
-      message: 'Username is required'
-    })
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username is required'
+      })
     }
 
-    const user = await User.findOne({where: { username}})
-    let account_exist =""
+    const user = await User.findOne({ where: { username } })
+    let account_exist = ''
 
-    if(!user){
-      account_exist = "no"
+    if (!user) {
+      account_exist = 'no'
     }
-    if(user){
-        account_exist = "yes"
-
+    if (user) {
+      account_exist = 'yes'
     }
     return res.status(200).json({
       status: 'Connected',
@@ -1054,11 +1098,10 @@ export const allocateCredits = async (req, res) => {
       generatedBy: req.user.id
     })
     await UserActivity.create({
-      user_id:id,
+      user_id: id,
       action: 'Credit Allocation',
       detail: `${creditToAdd} credits was allocated to ${user.username}  `
     })
-
 
     return res.status(201).json({
       success: true,
@@ -1122,22 +1165,20 @@ export const creditHistory = async (req, res) => {
   }
 }
 
-
 export const creditUsage = async (req, res) => {
-
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 10
+  const offset = (page - 1) * limit
 
   try {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
-      });
+      })
     }
 
-    const count = await Transaction.count();
+    const count = await Transaction.count()
 
     const transactions = await Transaction.findAll({
       limit,
@@ -1146,56 +1187,54 @@ export const creditUsage = async (req, res) => {
       include: [
         {
           model: User,
-          as: "user",
+          as: 'user',
           attributes: ['id', 'username', 'email']
         },
         {
           model: Media,
-          as: "media",
+          as: 'media',
           attributes: ['id', 'title', 'file_type', 'price']
         }
       ]
-    });
+    })
 
-    const totalPages = Math.ceil(count / limit);
-    const hasNextPage = page < totalPages;
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
 
     return res.status(200).json({
       success: true,
       transactions,
       hasNextPage
-    });
+    })
   } catch (error) {
-    console.error('creditUsage error:', error);
+    console.error('creditUsage error:', error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
-    });
+    })
   }
-};
-
-
+}
 
 export const getRecentActivities = async (req, res) => {
   if (!req.user || !req.user.id || req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
-      message: 'Unauthorized access',
-    });
+      message: 'Unauthorized access'
+    })
   }
 
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 20;
-    const offset = (page - 1) * limit;
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 20
+    const offset = (page - 1) * limit
 
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
     const { count, rows } = await UserActivity.findAndCountAll({
       where: {
         created_at: {
-          [Op.gte]: twentyFourHoursAgo,
-        },
+          [Op.gte]: twentyFourHoursAgo
+        }
       },
       order: [['created_at', 'DESC']],
       limit,
@@ -1204,64 +1243,54 @@ export const getRecentActivities = async (req, res) => {
         {
           model: User,
           as: 'user',
-          attributes: ['id', 'email', 'username'],
-        },
-      ],
-    });
+          attributes: ['id', 'email', 'username']
+        }
+      ]
+    })
 
-    const totalPages = Math.ceil(count / limit);
-    const hasNextPage = page < totalPages;
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
 
     return res.status(200).json({
       success: true,
       data: rows,
-      hasNextPage,
-    });
+      hasNextPage
+    })
   } catch (error) {
-    console.error('getRecentActivities error:', error);
+    console.error('getRecentActivities error:', error)
     return res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
-    });
+      message: 'Internal Server Error'
+    })
   }
-};
-
+}
 
 export const getDashboardDetails = async (req, res) => {
   if (!req.user || !req.user.id || req.user.role !== 'admin') {
     return res.status(403).json({
       success: false,
-      message: 'Unauthorized access',
-    });
+      message: 'Unauthorized access'
+    })
   }
 
   try {
-    const totalUsers = await User.count();
-    const totalMedia = await Media.count();
-    const totalActiveService = await Service.count({ where: { is_active: 1 } });
-    const totalCreditsAllocated = await CreditAllocation.sum('credits_added');
+    const totalUsers = await User.count()
+    const totalMedia = await Media.count()
+    const totalActiveService = await Service.count({ where: { is_active: 1 } })
+    const totalCreditsAllocated = await CreditAllocation.sum('credits_added')
 
     return res.status(200).json({
       success: true,
       totalUsers,
       totalMedia,
       totalActiveService,
-      totalCreditsAllocated: totalCreditsAllocated || 0,
-    });
+      totalCreditsAllocated: totalCreditsAllocated || 0
+    })
   } catch (error) {
-    console.error('getDashboardDetails error:', error);
+    console.error('getDashboardDetails error:', error)
     return res.status(500).json({
       success: false,
-      message: 'Internal Server Error',
-    });
+      message: 'Internal Server Error'
+    })
   }
-};
-
-
-
-
-
-
-
-
-
+}
