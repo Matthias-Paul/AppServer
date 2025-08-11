@@ -42,26 +42,7 @@ const CreditAllocation = () => {
   const users = data?.pages.flatMap((page) => page.users) || []
 
   console.log(selectedUser, selectedUserId, credit, reason)
-  const packages = [
-    {
-      id: 1,
-      package: 'Basic',
-      credits: 100,
-      price: 2000
-    },
-    {
-      id: 2,
-      package: 'Standard',
-      credits: 500,
-      price: 7000
-    },
-    {
-      id: 3,
-      package: 'Premium',
-      credits: 1000,
-      price: 20000
-    }
-  ]
+
 
   const userOptions = users.map((user) => ({
     label: user.email,
@@ -147,50 +128,7 @@ const CreditAllocation = () => {
     <>
       <div className="w-full mt-5 pb-20 ">
         <div className="flex gap-x-5  ">
-          <div className="w-3/6 p-4 shadow-lg rounded-lg ">
-            <h2 className="text-2xl font-bold "> Credits Packages </h2>
-            <div className="w-full">
-              {isLoading ? (
-                <div className="text-[#0D47A1] font-semibold text-lg">Loading...</div>
-              ) : packages.length > 0 ? (
-                <div className="overflow-x-auto mt-3 relative rounded-sm lg:rounded-md">
-                  <table className="text-left min-w-full mx-auto text-[#0D47A1]">
-                    <thead className="font-bold text-[22px] border-b-[0.5px] border-[#0D47A1]">
-                      <tr>
-                        <th className="py-2 pr-4 sm:py-3">Package</th>
-                        <th className="py-2 px-4 sm:py-3">Credits</th>
-                        <th className="py-2 px-4 sm:py-3">Price</th>
-                        <th className="py-2 px-4 sm:py-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {packages?.map((pack, index) => (
-                        <tr
-                          key={pack?.id}
-                          className={`border-b-[0.5px] border-[#0D47A1] font-medium text-[20px] cursor-pointer ${
-                            index === packages?.length - 1 ? 'border-b-0' : ''
-                          }`}
-                        >
-                          <td className="py-2 pr-4 sm:py-4 font-medium">{pack?.package}</td>
-                          <td className="py-2 px-4 sm:py-4 font-medium">{pack?.credits}</td>
-                          <td className="py-2 px-4 sm:py-4">₦{pack?.price}</td>
-
-                          <td className="py-2 px-4 sm:py-4 font-medium">
-                            <button className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   ">
-                              Edit
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-[#0D47A1] font-semibold text-lg">No package Found.</div>
-              )}
-            </div>
-          </div>
-          <div className="w-3/6 shadow-md p-4 rounded-lg ">
+          <div className="w-full shadow-md p-4 rounded-lg ">
             <h2 className="text-2xl font-bold"> Credits Allocation </h2>
             <form onSubmit={handleSubmit}>
               <div className="mt-6   ">

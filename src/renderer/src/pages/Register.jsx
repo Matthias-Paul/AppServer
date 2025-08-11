@@ -13,7 +13,7 @@ const Register = () => {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('client')
+  const [role, setRole] = useState('admin')
 
   const registerMutation = useMutation({
     mutationFn: async () => {
@@ -119,22 +119,6 @@ const Register = () => {
               />
             </div>
 
-            <div className="mb-3">
-              <label id="password" className="block font-semibold mb-1 ">
-                {' '}
-                Role{' '}
-              </label>
-
-              <select
-                onChange={(e) => setRole(e.target.value)}
-                value={role}
-                className="border focus:outline-none w-full px-1 py-3 cursor-pointer rounded-md border-[#0D47A1]"
-              >
-                <option value="client">Client</option>
-                <option value="sales_rep">Sales Rep </option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
 
             <button
               type="submit"

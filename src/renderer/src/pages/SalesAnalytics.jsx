@@ -1,22 +1,36 @@
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { useInfiniteQuery, useQueryClient, useMutation, useQuery} from '@tanstack/react-query'
+import getBackendURL from '../components/GetBackendURL.jsx'
+
+
 
 const SalesAnalytics = () => {
   const [sort, setSort] = useState('')
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const [baseURL, setBaseURL] = useState('')
+  const token = localStorage.getItem('token')
+
+
+  useEffect(() => {
+    const loadURL = async () => {
+      const url = await getBackendURL()
+      setBaseURL(url)
+    }
+    loadURL()
+  }, [])
+
 
   const revenueTrends = [
-    { name: 'Day 1', value: 0 },
-    { name: 'Day 2', value: 20000 },
-    { name: 'Day 3', value: 15000 },
-    { name: 'Day 4', value: 30000 },
-    { name: 'Day 5', value: 50000 },
-    { name: 'Day 6', value: 45000 },
-    { name: 'Day 7', value: 70000 },
-    { name: 'Day 8', value: 85000 },
-    { name: 'Day 9', value: 125000 }
+    { name: 'Today', value: 0 },
+    { name: 'last 7 Days', value: 15000 },
+    { name: 'last 30 Days', value: 30000 },
+    { name: 'last 3 Months', value: 50000 },
+    { name: 'last 6 Months', value: 45000 },
+    { name: 'last 9 Months', value: 70000 },
+    { name: 'last 1 Year', value: 85000 },
   ]
 
   const topServices = [
@@ -25,66 +39,63 @@ const SalesAnalytics = () => {
     { name: 'Youth Conference', revenue: '₦25,300' }
   ]
 
-  useEffect(() => {
-    const currentFilter = searchParams.get('sortBy')
+  const fetchSalesAnalyticsStats = async()=>{
 
-    if (!currentFilter) {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('sortBy', 'today')
-      navigate({ search: params.toString() }, { replace: true })
-    } else {
-      setSort(currentFilter)
-    }
-  }, [searchParams, navigate])
+    const res = await fetch(`${baseURL}/api/sales/stats`,{
+        method:"GET",
+        headers:{
+          Authorization:`Bearer ${token}`
+        },
+    })
+      if(!res.ok){
+        throw new Error("Error while fetching stats");
+      }
+      return res.json()
 
-  const handleSortChange = (e) => {
-    const sortBy = e.target.value
-    const newParams = new URLSearchParams(searchParams.toString())
-    newParams.set('sortBy', sortBy)
-    setSearchParams(newParams)
   }
+
+    const { data } = useQuery({
+      queryKey:["saleStats"],
+      queryFn:fetchSalesAnalyticsStats,
+      enabled: !!baseURL && !!token,
+    })
+
+    console.log(data)
+
+
+
+
+
+
+
 
   return (
     <div className="pt-7 min-h-[400px] text-[#0D47A1] w-full pl-7 overflow-hidden">
       <div className="flex justify-between items-center">
         <h2 className="text-[#0D47A1] font-bold text-3xl xl:text-4xl">Sales Analytics</h2>
-        <select
-          onChange={handleSortChange}
-          value={searchParams.get('sortBy') || '30'}
-          id="sort"
-          className="border px-4 py-1 cursor-pointer rounded-md border-[#0D47A1]"
-        >
-          <option value="today">Today</option>
-          <option value="24hours">Last 24 Hours </option>
-          <option value="7days">Last 7 Days</option>
-          <option value="30days">Last 30 Days</option>
-          <option value="6months">Last 6 Months</option>
-          <option value="9months">Last 9 Months</option>
-          <option value="1year">Last 1 Year</option>
-        </select>
       </div>
 
       <div className="flex flex-wrap gap-y-5 gap-x-5 my-8 items-center justify-start text-[#0D47A1] ">
         <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-          <h1 className="font-bold text-[30px] ">₦223,247</h1>
+          <h1 className="font-bold text-[30px] ">₦{data?.totalRevenue?.toLocaleString()  ||  "--"  }</h1>
           <h5 className="text-[20px] ">Total Revenue</h5>
         </div>
         <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-          <h1 className="font-bold text-[30px] ">1,247</h1>
+          <h1 className="font-bold text-[30px] ">{data?.totalDownload?.toLocaleString()  ||  "--"  }</h1>
           <h5 className="text-[20px] "> Downloads </h5>
         </div>
         <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-          <h1 className="font-bold text-[30px] ">₦12,247</h1>
-          <h5 className="text-[20px] ">Avg. Revenue Per</h5>
+          <h1 className="font-bold text-[30px] ">₦{data?.avgRevenue?.toLocaleString()  ||  "--"  }</h1>
+          <h5 className="text-[20px] ">Avg. Revenue Per User</h5>
         </div>
         <div className="flex flex-col items-center text-center  justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-          <h1 className="font-bold text-[30px] ">89%</h1>
+          <h1 className="font-bold text-[30px] ">{data?.userRetention?.toLocaleString()  ||  "--"  }%</h1>
           <h5 className="text-[20px] "> User Retention </h5>
         </div>
       </div>
 
-      <div className="w-full flex gap-x-5 ">
-        <div className="w-3/5 border border-[#0D47A1] rounded-lg p-4 ">
+      <div className="w-full flex flex-col gap-y-8 ">
+        <div className="w-full  border border-[#0D47A1] rounded-lg p-4 ">
           <h2 className="text-[#0D47A1] font-semibold text-2xl"> Revenue Trends </h2>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={revenueTrends}>

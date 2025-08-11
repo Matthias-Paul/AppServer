@@ -18,6 +18,7 @@ import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import { getMediaDuration } from '../utils/getMediaDuration.js'
 import UserActivity from '../models/userActivities.model.js'
+import MediaPurchase from '../models/mediaPurchase.model.js'
 
 export const getUsers = async (req, res) => {
   try {
@@ -1288,6 +1289,46 @@ export const getDashboardDetails = async (req, res) => {
     })
   } catch (error) {
     console.error('getDashboardDetails error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getSalesStats = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+    const totalUsers = await User.count()
+
+    const totalRevenue = (await CreditAllocation.sum('credits_added')) || 0
+    const totalDownload = (await MediaPurchase.count({})) || 0
+    const avgRevenue = totalUsers > 0 ? totalRevenue / totalUsers : 0
+
+    // Calculate user retention based on users with credits vs total users
+    const activeUsers = await User.count({
+      where: {
+        credits: {
+          [Op.gt]: 0 // Users with credits (active users)
+        }
+      }
+    })
+    const userRetention = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
+
+    return res.status(200).json({
+      success: true,
+      totalRevenue,
+      totalDownload,
+      avgRevenue,
+      userRetention: Math.round(userRetention * 100) / 100 // Round to 2 decimal places
+    })
+  } catch (error) {
+    console.error('getSalesStats error:', error)
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error'

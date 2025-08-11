@@ -130,19 +130,19 @@ const fetchDashBoardDetail = async()=>{
 
         <div className="flex flex-wrap gap-y-5 gap-x-5  items-center justify-start text-[#0D47A1] ">
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">{data?.totalUsers || "--"}</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalUsers?.toLocaleString() || "--"}</h1>
             <h5 className="text-[20px] ">Total Users</h5>
           </div>
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">{data?.totalCreditsAllocated || "--"}</h1>
+            <h1 className="font-bold text-[30px] ">₦{data?.totalCreditsAllocated?.toLocaleString() || "--"}</h1>
             <h5 className="text-[20px] ">Credits Sold</h5>
           </div>
           <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">{data?.totalActiveService || "--"}</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalActiveService?.toLocaleString() || "--"}</h1>
             <h5 className="text-[20px] ">Actives Services</h5>
           </div>
           <div className="flex flex-col items-center text-center  justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-            <h1 className="font-bold text-[30px] ">{data?.totalMedia || "--"}</h1>
+            <h1 className="font-bold text-[30px] ">{data?.totalMedia?.toLocaleString() || "--"}</h1>
             <h5 className="text-[20px] ">Media Files</h5>
           </div>
         </div>
