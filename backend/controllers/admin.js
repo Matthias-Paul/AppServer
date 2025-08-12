@@ -11,7 +11,8 @@ import ChurchSetting from '../models/ChurchSettings.model.js'
 import Transaction from '../models/transaction.model.js'
 import CreditAllocation from '../models/creditsAllocation.model.js'
 import { v4 as uuidv4 } from 'uuid'
-import { Op, literal } from 'sequelize'
+import { Op, literal, QueryTypes } from 'sequelize'
+import { sequelize } from '../database/DB.config.js'
 import { validationResult, matchedData } from 'express-validator'
 import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
@@ -1335,3 +1336,93 @@ export const getSalesStats = async (req, res) => {
     })
   }
 }
+
+
+export const getSalesChart = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const timePeriods = [
+      { name: 'Today', days: 0 },
+      { name: 'Last 7d', days: 7 },
+      { name: 'Last 30d', days: 30 },
+      { name: 'Last 3mo', days: 90 },
+      { name: 'Last 6mo', days: 180 },
+      { name: 'Last 9mo', days: 270 },
+      { name: 'Last 1yr', days: 365 }
+    ];
+
+    // Calculate revenue for each time period using credit allocation
+    const revenueTrends = await Promise.all(
+      timePeriods.map(async (period) => {
+        const startDate = new Date(today)
+        startDate.setDate(startDate.getDate() - period.days)
+
+        // Get total credits added for the period
+        const totalCredits = await CreditAllocation.sum('credits_added', {
+          where: {
+            created_at: {
+              [Op.gte]: startDate,
+              [Op.lte]: now
+            }
+          }
+        })
+
+        return {
+          name: period.name,
+          value: Math.round((totalCredits || 0) * 100) / 100
+        }
+      })
+    )
+
+    // Calculate top services by revenue using raw SQL for better performance
+    const topServices = await sequelize.query(`
+      SELECT
+        s.id,
+        s.name,
+        COUNT(t.id) as total_transactions,
+        COALESCE(SUM(t.credits_used), 0) as total_revenue
+      FROM services s
+      LEFT JOIN service_media sm ON s.id = sm.service_id
+      LEFT JOIN media m ON sm.media_id = m.id
+      LEFT JOIN transactions t ON m.id = t.media_id
+      GROUP BY s.id, s.name
+      HAVING total_revenue > 0
+      ORDER BY total_revenue DESC
+      LIMIT 15
+    `, {
+      type: QueryTypes.SELECT
+    })
+
+    // Format top services data (raw SQL returns plain objects)
+    const formattedTopServices = topServices.map(service => ({
+      id: service.id,
+      name: service.name,
+      revenue: parseFloat(service.total_revenue) || 0,
+      transactions: parseInt(service.total_transactions) || 0
+    }))
+
+    return res.status(200).json({
+      success: true,
+      revenueTrends,
+      topServices: formattedTopServices
+    })
+
+  } catch (error) {
+    console.error('getSalesChart error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+

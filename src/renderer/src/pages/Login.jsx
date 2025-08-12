@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { signInSuccess } from '../redux/slice/adminSlice.js'
 import { useDispatch, useSelector } from 'react-redux'
 import toast from 'react-hot-toast'
@@ -9,10 +9,25 @@ import getBackendURL from '../components/GetBackendURL.jsx'
 const Login = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { loginAdmin } = useSelector((state) => state.admin)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const fetchAdminStatus = async () => {
+    const baseURL = await getBackendURL()
+    const res = await fetch(`${baseURL}/api/auth/check-admin`)
+    if (!res.ok) throw new Error('Failed to check admin status')
+    return res.json()
+  }
+
+  const { data: adminCheck, isLoading: adminCheckLoading } = useQuery({
+    queryKey: ['adminExist-check'],
+    queryFn: fetchAdminStatus,
+    retry: 1,
+    refetchOnWindowFocus: false
+  })
+
+  console.log('admincheck', adminCheck)
 
   const loginMutation = useMutation({
     mutationFn: async () => {
@@ -107,14 +122,15 @@ const Login = () => {
             >
               {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
             </button>
-            {/* google auth button */}
 
-            <p className="mt-[15px] text-md text-[#0D47A1]   text-center ">
-              Don't have an account?
-              <Link to="/register" className="text-[#0D47A1]  ml-1 ">
-                Register
-              </Link>
-            </p>
+            {!adminCheck?.adminExists && (
+              <p className="mt-[15px] text-md text-[#0D47A1]   text-center ">
+                Don't have an account?
+                <Link to="/register" className="text-[#0D47A1]  ml-1 ">
+                  Register
+                </Link>
+              </p>
+            )}
           </form>
         </div>
       </div>

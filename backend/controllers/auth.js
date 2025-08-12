@@ -21,6 +21,13 @@ export const registerUser = async (req, res, next) => {
 
   try {
     const { username, email, password, role } = matchedData(req)
+    const adminExist = await User.findOne({ where: { role: 'admin' } })
+    if(adminExist){
+      return res.status(400).json({
+        success: false,
+        message: 'Admin already exists.'
+      })
+    }
 
     const existingEmail = await User.findOne({ where: { email } })
 
@@ -152,6 +159,29 @@ export const logoutUser = async (req, res) => {
 
     return res.status(500).json({
       statusCode: 500,
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const checkAdminExists = async (req, res) => {
+  try {
+    // Check if any admin exists in the database
+    const adminExists = await User.findOne({
+      where: {
+        role: 'admin'
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      adminExists: !!adminExists
+    })
+
+  } catch (error) {
+    console.error('checkAdminExists error:', error)
+    return res.status(500).json({
       success: false,
       message: 'Internal Server Error'
     })

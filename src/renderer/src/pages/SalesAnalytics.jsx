@@ -7,8 +7,6 @@ import getBackendURL from '../components/GetBackendURL.jsx'
 
 
 const SalesAnalytics = () => {
-  const [sort, setSort] = useState('')
-  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [baseURL, setBaseURL] = useState('')
   const token = localStorage.getItem('token')
@@ -23,21 +21,7 @@ const SalesAnalytics = () => {
   }, [])
 
 
-  const revenueTrends = [
-    { name: 'Today', value: 0 },
-    { name: 'last 7 Days', value: 15000 },
-    { name: 'last 30 Days', value: 30000 },
-    { name: 'last 3 Months', value: 50000 },
-    { name: 'last 6 Months', value: 45000 },
-    { name: 'last 9 Months', value: 70000 },
-    { name: 'last 1 Year', value: 85000 },
-  ]
 
-  const topServices = [
-    { name: 'Covenant Day', revenue: '₦45,200' },
-    { name: 'Sunday Worship', revenue: '₦38,900' },
-    { name: 'Youth Conference', revenue: '₦25,300' }
-  ]
 
   const fetchSalesAnalyticsStats = async()=>{
 
@@ -63,9 +47,31 @@ const SalesAnalytics = () => {
     console.log(data)
 
 
+    const fetchSalesAnalyticsChart = async()=>{
+
+      const res = await fetch(`${baseURL}/api/sales/chart`,{
+          method:"GET",
+          headers:{
+            Authorization:`Bearer ${token}`
+          },
+      })
+        if(!res.ok){
+          throw new Error("Error while fetching stats");
+        }
+        return res.json()
+
+    }
+
+      const { data: saleChart } = useQuery({
+        queryKey:["saleChart"],
+        queryFn:fetchSalesAnalyticsChart,
+        enabled: !!baseURL && !!token,
+      })
+
+      console.log(saleChart)
 
 
-
+             // Use real data from API instead of hardcoded values
 
 
 
@@ -97,12 +103,22 @@ const SalesAnalytics = () => {
       <div className="w-full flex flex-col gap-y-8 ">
         <div className="w-full  border border-[#0D47A1] rounded-lg p-4 ">
           <h2 className="text-[#0D47A1] font-semibold text-2xl"> Revenue Trends </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={revenueTrends}>
+                    <ResponsiveContainer width="100%" height={400}>
+            <LineChart data={saleChart?.revenueTrends || []} margin={{ left: 40, top: 20, bottom: 20 }}>
               <XAxis axisLine={false} tickLine={false} dataKey="name" />
               <YAxis axisLine={false} tickLine={false} />
-              <Tooltip />
-              <Line dot={false} type="monotone" dataKey="value" stroke="#0D47A1" strokeWidth={3} />
+              <Tooltip
+                formatter={(value) => [`₦${value?.toLocaleString()}`, 'Revenue']}
+                labelFormatter={(label) => `${label}`}
+              />
+              <Line
+                dot={true}
+                type="monotone"
+                dataKey="value"
+                stroke="#0D47A1"
+                strokeWidth={3}
+                strokeDasharray="5 5"
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -110,37 +126,50 @@ const SalesAnalytics = () => {
         <div className="border flex-grow border-[#0D47A1] rounded-lg p-4 ">
           <h2 className="text-[#0D47A1] font-semibold text-4xl"> Top Services </h2>
           <div className="w-full">
-            {topServices.length > 0 ? (
-              <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
-                <table className="text-left min-w-full mx-auto text-[#0D47A1]">
-                  <thead className="font-semibold text-[25px] border-b-[2px] border-[#0D47A1]">
-                    <tr>
-                      <th className="py-2 pr-4 sm:py-3">Service</th>
-                      <th className="py-2 px-4 sm:py-3">Revenue</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {topServices?.map((service, index) => (
-                      <tr
-                        key={service?.id}
-                        className={`border-b-[2px] border-[#0D47A1] font-medium  cursor-pointer ${
-                          index === topServices?.length - 1 ? 'border-b-0' : ''
-                        }`}
-                      >
-                        <td className="py-2 pr-4 sm:py-4 text-[20px] font-medium">
-                          {service?.name}
-                        </td>
-                        <td className="py-2 px-4 sm:py-4 text-[20px] font-medium">
-                          {service?.revenue}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-[#0D47A1] font-semibold text-lg">No Top Service Found.</div>
-            )}
+             {saleChart?.topServices ? (
+               saleChart?.topServices?.length > 0 ? (
+                 <div className="overflow-x-auto relative rounded-sm lg:rounded-md">
+                   <table className="text-left min-w-full mx-auto text-[#0D47A1]">
+                     <thead className="font-semibold text-[25px] border-b-[2px] border-[#0D47A1]">
+                       <tr>
+                         <th className="py-2 pr-4 sm:py-3">Service</th>
+                         <th className="py-2 px-4 sm:py-3">Revenue</th>
+                         <th className="py-2 px-4 sm:py-3">Transactions</th>
+                       </tr>
+                     </thead>
+                     <tbody>
+                       {saleChart.topServices.map((service, index) => (
+                         <tr
+                           key={service?.id}
+                           className={`border-b-[2px] border-[#0D47A1] font-medium  cursor-pointer ${
+                             index === saleChart?.topServices?.length - 1 ? 'border-b-0' : ''
+                           }`}
+                         >
+                           <td className="py-2 pr-4 sm:py-4 text-[20px] font-medium">
+                             {service?.name}
+                           </td>
+                           <td className="py-2 px-4 sm:py-4 text-[20px] font-medium">
+                             ₦{service?.revenue?.toLocaleString() || '0'}
+                           </td>
+                           <td className="py-2 px-4 sm:py-4 text-[20px] font-medium">
+                             {service?.transactions?.toLocaleString() || '0'}
+                           </td>
+                         </tr>
+                       ))}
+                     </tbody>
+                   </table>
+                 </div>
+               ) : (
+                 <div className="flex flex-col items-center justify-center py-12 text-center">
+                   <h3 className="text-[#0D47A1] font-semibold text-lg ">No Top Services Yet</h3>
+
+                 </div>
+               )
+             ) : (
+               <div className="flex items-center justify-center py-8">
+                 <div className="text-[#0D47A1] text-lg">Loading top services...</div>
+               </div>
+             )}
           </div>
         </div>
       </div>
