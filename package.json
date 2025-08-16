@@ -66,20 +66,13 @@
           "target": "dmg",
           "arch": ["x64", "arm64"]
         }
-      ]
+      ],
+      "identity": "W7B8LSD8Q4"
     },
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        },
-        {
-          "target": "msi",
           "arch": ["x64"]
         }
       ]
