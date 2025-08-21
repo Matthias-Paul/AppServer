@@ -10,8 +10,9 @@
     "lint": "eslint --cache .",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
+    "prebuild": "cd backend && npm install",
     "build": "electron-vite build",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps && cd backend && npm install",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
@@ -54,7 +55,20 @@
   "build": {
     "appId": "com.mediaunboxed.desktop",
     "productName": "MediaUnboxed",
-
+    "files": [
+      "out/**/*",
+      "backend/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
+    ],
+    "directories": {
+      "output": "dist"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [
@@ -79,9 +93,6 @@
     },
     "linux": {
       "target": ["AppImage", "deb"]
-    },
-    "directories": {
-      "output": "dist"
     }
   }
 }

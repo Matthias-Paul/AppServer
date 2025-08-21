@@ -15,12 +15,59 @@ if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow
+  let serverProcess = null // Track the server process globally
 
+  function startBackendServer() {
+    const isDev = is.dev
+    let serverPath
+    let workingDir
 
+    if (isDev) {
+      // In development, point to your backend folder
+      serverPath = join(__dirname, '../../backend/index.js')
+      workingDir = join(__dirname, '../../backend')
+    } else {
+      // In production, use the bundled backend
+      serverPath = join(process.resourcesPath, 'backend/index.js')
+      workingDir = join(process.resourcesPath, 'backend')
+    }
+
+    console.log('Starting backend server...')
+    console.log('Server path:', serverPath)
+    console.log('Working directory:', workingDir)
+    console.log('Environment:', isDev ? 'development' : 'production')
+
+    try {
+      serverProcess = spawn(process.execPath, [serverPath], {
+        stdio: 'inherit',
+        cwd: workingDir, // Set working directory
+        env: {
+          ...process.env,
+          NODE_ENV: isDev ? 'development' : 'production',
+          ELECTRON_ENV: 'true'
+        }
+      })
+
+      serverProcess.on('error', (err) => {
+        console.error('Failed to start backend server:', err)
+      })
+
+      serverProcess.on('exit', (code, signal) => {
+        console.log(`Backend server exited with code: ${code}, signal: ${signal}`)
+        serverProcess = null
+      })
+
+      console.log('✅ Backend server started successfully')
+      return true
+    } catch (error) {
+      console.error('❌ Error starting backend server:', error)
+      return false
+    }
+  }
 
   function createWindow() {
     // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
       width: 1400,
       height: 1000,
       show: false,
@@ -58,57 +105,43 @@ if (!gotTheLock) {
 
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
-  // Some APIs can only be used after this event occurs.
-
   app.whenReady().then(() => {
     // Set app user model id for windows
-    electronApp.setAppUserModelId('com.electron')
+    electronApp.setAppUserModelId('com.mediaunboxed.desktop')
 
-    //  Start Express Server as a child process
+    // Start Express Server first
+    console.log('🚀 Starting application...')
+    const serverStarted = startBackendServer()
 
-    const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        NODE_ENV: is.dev ? 'development' : 'production'
-      }
-    })
-
-    serverProcess.on('error', (err) => {
-      console.error('Failed to start server:', err)
-    })
-
-    serverProcess.on('exit', (code) => {
-      console.log(` Server exited with code: ${code}`)
-    })
+    if (!serverStarted) {
+      console.error('❌ Failed to start backend server. App may not function properly.')
+    }
 
     // Default open or close DevTools by F12 in development
-    // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // IPC test
+    // IPC handlers
     ipcMain.on('ping', () => console.log('pong'))
 
+    ipcMain.handle('select-media-file', async () => {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Media File',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
+        ]
+      });
 
+      if (result.canceled) return null;
+      return result.filePaths[0]; // Full file path
+    });
 
-ipcMain.handle('select-media-file', async () => {
-  const result = await dialog.showOpenDialog({
-    title: 'Select Media File',
-    properties: ['openFile'],
-    filters: [
-      { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
-    ]
-  });
-
-  if (result.canceled) return null;
-  return result.filePaths[0]; // Full file path
-});
-
-
-    createWindow()
+    // Wait a moment for server to start, then create window
+    setTimeout(() => {
+      createWindow()
+    }, 2000) // Give server 2 seconds to start
 
     app.on('activate', function () {
       // On macOS it's common to re-create a window in the app when the
@@ -117,12 +150,35 @@ ipcMain.handle('select-media-file', async () => {
     })
   })
 
-  // Quit when all windows are closed, except on macOS. There, it's common
-  // for applications and their menu bar to stay active until the user quits
-  // explicitly with Cmd + Q.
+  // Cleanup when app is closing
+  app.on('before-quit', (event) => {
+    if (serverProcess) {
+      console.log('🛑 Shutting down backend server...')
+      serverProcess.kill('SIGTERM')
+
+      // Give server time to shutdown gracefully
+      setTimeout(() => {
+        if (serverProcess) {
+          console.log('🔪 Force killing backend server...')
+          serverProcess.kill('SIGKILL')
+        }
+      }, 5000)
+    }
+  })
+
+  // Quit when all windows are closed, except on macOS
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit()
+    }
+  })
+
+  // Handle second instance
+  app.on('second-instance', () => {
+    // Someone tried to run a second instance, focus our window instead
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
     }
   })
 }
