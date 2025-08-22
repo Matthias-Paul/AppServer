@@ -11,12 +11,19 @@ const __dirname = dirname(__filename)
 
 const gotTheLock = app.requestSingleInstanceLock()
 
+// Store network configuration
+let networkConfig = null
+
+// Function to set config from backend
+export function setNetworkConfig(config) {
+  networkConfig = config
+  console.log('Network config received in main process:', config)
+}
+
 if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow
-
-
 
   function createWindow() {
     // Create the browser window.
@@ -65,12 +72,19 @@ if (!gotTheLock) {
     electronApp.setAppUserModelId('com.electron')
 
     //  Start Express Server as a child process
-
     const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
-      stdio: 'inherit',
+      stdio: ['inherit', 'inherit', 'inherit', 'ipc'], // Enable IPC
       env: {
         ...process.env,
         NODE_ENV: is.dev ? 'development' : 'production'
+      }
+    })
+
+    // Listen for messages from backend
+    serverProcess.on('message', (message) => {
+      if (message.type === 'network-config') {
+        networkConfig = message.config
+        console.log('Received network config from backend:', networkConfig)
       }
     })
 
@@ -79,34 +93,37 @@ if (!gotTheLock) {
     })
 
     serverProcess.on('exit', (code) => {
-      console.log(` Server exited with code: ${code}`)
+      console.log(`Server exited with code: ${code}`)
     })
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // IPC test
+    // IPC handlers
     ipcMain.on('ping', () => console.log('pong'))
 
+    // Handle config request from renderer
+    ipcMain.handle('get-config', () => {
+      console.log('Config requested from renderer, returning:', networkConfig)
+      return networkConfig
+    })
 
+    // Handle media file selection
+    ipcMain.handle('select-media-file', async () => {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Media File',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
+        ]
+      })
 
-ipcMain.handle('select-media-file', async () => {
-  const result = await dialog.showOpenDialog({
-    title: 'Select Media File',
-    properties: ['openFile'],
-    filters: [
-      { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
-    ]
-  });
-
-  if (result.canceled) return null;
-  return result.filePaths[0]; // Full file path
-});
-
+      if (result.canceled) return null
+      return result.filePaths[0] // Full file path
+    })
 
     createWindow()
 
@@ -126,6 +143,3 @@ ipcMain.handle('select-media-file', async () => {
     }
   })
 }
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

@@ -9,7 +9,6 @@ import { testDbConnection } from './database/DB.config.js'
 import authRoute from './routes/auth.route.js'
 import adminRoute from './routes/admin.route.js'
 import mobileRoute from './routes/mobile.route.js'
-
 import multer from 'multer'
 
 dotenv.config()
@@ -31,22 +30,23 @@ app.use('/api', authRoute)
 app.use('/api', adminRoute)
 app.use('/api', mobileRoute)
 
-
-
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    // Multer-specific errors
     return res.status(400).json({ success: false, message: err.message })
   } else if (
     err.message === 'Unsupported file type' ||
     err.message === 'Unsupported media file type'
   ) {
-    // Custom file type errors
     return res.status(400).json({ success: false, message: err.message })
   }
 })
 
 app.use('/fileStorage', express.static(path.join(process.cwd(), 'backend/fileStorage')))
+
+// Add endpoint to serve config
+app.get('/api/config', (req, res) => {
+  res.json(global.networkConfig || {})
+})
 
 export async function startServer() {
   const { ip, ssid, password } = await getNetworkInfo()
@@ -55,58 +55,41 @@ export async function startServer() {
   console.log('SSID:', ssid)
   console.log('Password:', password)
 
-  // Write JSON config for frontend
+  // Create config object
   const config = {
     backendIP: ip,
     backendPort: PORT,
     timestamp: new Date().toISOString()
   }
 
-  const configPath = path.join(process.cwd(), 'src/renderer/src/assets/config.json')
+  // Store config globally for the API endpoint
+  global.networkConfig = config
 
-  // Create file with empty object if it doesn't exist
-  if (!fs.existsSync(configPath)) {
-    fs.mkdirSync(path.dirname(configPath), { recursive: true })
-    fs.writeFileSync(configPath, JSON.stringify({}, null, 2))
-    console.log('Created new config.json at:', configPath)
+  // Send config to parent process (main Electron process) if running as child process
+  if (process.send) {
+    process.send({
+      type: 'network-config',
+      config: config
+    })
+    console.log('Sent config to main process via IPC')
   }
 
-  //update with current config
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
-  console.log(' Updated config.json at:', configPath)
-
-  // const frontendEnvPath = path.join(process.cwd(), '.env')
-  const frontendEnvPath = path.resolve(process.cwd(), '.env')
-
-  let existingEnv = ''
-  if (fs.existsSync(frontendEnvPath)) {
-    existingEnv = fs.readFileSync(frontendEnvPath, 'utf-8')
-  }
-
-  let envLines = existingEnv.split('\n')
-
-  function setEnvValue(key, value) {
-    const lineIndex = envLines.findIndex((line) => line.startsWith(`${key}=`))
-    const line = `${key}=${value}`
-    if (lineIndex !== -1) {
-      envLines[lineIndex] = line
-    } else {
-      envLines.push(line)
+  // Also write to file as fallback (for development)
+  try {
+    const configPath = path.join(process.cwd(), 'src/renderer/src/assets/config.json')
+    if (!fs.existsSync(path.dirname(configPath))) {
+      fs.mkdirSync(path.dirname(configPath), { recursive: true })
     }
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
+    console.log('Config written to file as fallback:', configPath)
+  } catch (error) {
+    console.log('Could not write config file (this is normal in production):', error.message)
   }
-
-  setEnvValue('VITE_BACKEND_IP', ip)
-  setEnvValue('VITE_BACKEND_PORT', PORT)
-  setEnvValue('VITE_NETWORK_NAME', ssid)
-  setEnvValue('VITE_NETWORK_PASSWORD', password)
-
-  fs.writeFileSync(frontendEnvPath, envLines.join('\n'))
-  console.log('Updated frontend .env at:', frontendEnvPath)
 
   testDbConnection()
 
   app.listen(PORT, ip, () => {
-    console.log(` Server running at: http://${ip}:${PORT}`)
+    console.log(`Server running at: http://${ip}:${PORT}`)
   })
 }
 
