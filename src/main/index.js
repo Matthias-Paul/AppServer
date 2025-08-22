@@ -11,59 +11,19 @@ const __dirname = dirname(__filename)
 
 const gotTheLock = app.requestSingleInstanceLock()
 
+// Store network configuration
+let networkConfig = null
+
+// Function to set config from backend
+export function setNetworkConfig(config) {
+  networkConfig = config
+  console.log('Network config received in main process:', config)
+}
+
 if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow
-  let serverProcess = null // Track the server process globally
-
-  function startBackendServer() {
-    const isDev = is.dev
-    let serverPath
-    let workingDir
-
-    if (isDev) {
-      // In development, point to your backend folder
-      serverPath = join(__dirname, '../../backend/index.js')
-      workingDir = join(__dirname, '../../backend')
-    } else {
-      // In production, use the bundled backend
-      serverPath = join(process.resourcesPath, 'backend/index.js')
-      workingDir = join(process.resourcesPath, 'backend')
-    }
-
-    console.log('Starting backend server...')
-    console.log('Server path:', serverPath)
-    console.log('Working directory:', workingDir)
-    console.log('Environment:', isDev ? 'development' : 'production')
-
-    try {
-      serverProcess = spawn(process.execPath, [serverPath], {
-        stdio: 'inherit',
-        cwd: workingDir, // Set working directory
-        env: {
-          ...process.env,
-          NODE_ENV: isDev ? 'development' : 'production',
-          ELECTRON_ENV: 'true'
-        }
-      })
-
-      serverProcess.on('error', (err) => {
-        console.error('Failed to start backend server:', err)
-      })
-
-      serverProcess.on('exit', (code, signal) => {
-        console.log(`Backend server exited with code: ${code}, signal: ${signal}`)
-        serverProcess = null
-      })
-
-      console.log('✅ Backend server started successfully')
-      return true
-    } catch (error) {
-      console.error('❌ Error starting backend server:', error)
-      return false
-    }
-  }
 
   function createWindow() {
     // Create the browser window.
@@ -109,15 +69,33 @@ if (!gotTheLock) {
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.mediaunboxed.desktop')
 
-    // Start Express Server first
-    console.log('🚀 Starting application...')
-    const serverStarted = startBackendServer()
+    //  Start Express Server as a child process
+    const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
+      stdio: ['inherit', 'inherit', 'inherit', 'ipc'], // Enable IPC
+      env: {
+        ...process.env,
+        NODE_ENV: is.dev ? 'development' : 'production'
+      }
+    })
 
-    if (!serverStarted) {
-      console.error('❌ Failed to start backend server. App may not function properly.')
-    }
+    // Listen for messages from backend
+    serverProcess.on('message', (message) => {
+      if (message.type === 'network-config') {
+        networkConfig = message.config
+        console.log('Received network config from backend:', networkConfig)
+      }
+    })
+
+    serverProcess.on('error', (err) => {
+      console.error('Failed to start server:', err)
+    })
+
+    serverProcess.on('exit', (code) => {
+      console.log(`Server exited with code: ${code}`)
+    })
 
     // Default open or close DevTools by F12 in development
+    // and ignore CommandOrControl + R in production.
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
@@ -125,6 +103,13 @@ if (!gotTheLock) {
     // IPC handlers
     ipcMain.on('ping', () => console.log('pong'))
 
+    // Handle config request from renderer
+    ipcMain.handle('get-config', () => {
+      console.log('Config requested from renderer, returning:', networkConfig)
+      return networkConfig
+    })
+
+    // Handle media file selection
     ipcMain.handle('select-media-file', async () => {
       const result = await dialog.showOpenDialog({
         title: 'Select Media File',
@@ -132,16 +117,13 @@ if (!gotTheLock) {
         filters: [
           { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
         ]
-      });
+      })
 
-      if (result.canceled) return null;
-      return result.filePaths[0]; // Full file path
-    });
+      if (result.canceled) return null
+      return result.filePaths[0] // Full file path
+    })
 
-    // Wait a moment for server to start, then create window
-    setTimeout(() => {
-      createWindow()
-    }, 2000) // Give server 2 seconds to start
+    createWindow()
 
     app.on('activate', function () {
       // On macOS it's common to re-create a window in the app when the
@@ -172,16 +154,4 @@ if (!gotTheLock) {
       app.quit()
     }
   })
-
-  // Handle second instance
-  app.on('second-instance', () => {
-    // Someone tried to run a second instance, focus our window instead
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
-    }
-  })
 }
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
