@@ -1,9 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { spawn } from 'child_process'
+// import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+
+// Import backend server function directly
+import { startServer } from '../../backend/index.js'
 
 // Handle __dirname with ESM
 const __filename = fileURLToPath(import.meta.url)
@@ -14,22 +17,34 @@ const gotTheLock = app.requestSingleInstanceLock()
 // Store network configuration
 let networkConfig = null
 
-// Function to set config from backend
-export function setNetworkConfig(config) {
-  networkConfig = config
-  console.log('Network config received in main process:', config)
+const path = require('path');
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+} else {
+  // For production, load from the app resources
+  const envPath = path.join(process.resourcesPath, '.env');
+  require('dotenv').config({ path: envPath });
 }
+
+// Function to set config from backend
+// export function setNetworkConfig(config) {
+//   networkConfig = config
+//   console.log('Network config received in main process:', config)
+// }
 
 if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow
+  // let serverProcess = null // Declare serverProcess in the outer scope
 
   function createWindow() {
     // Create the browser window.
+    // const mainWindow = new BrowserWindow({
     mainWindow = new BrowserWindow({
       width: 1400,
       height: 1000,
+      icon: path.join(__dirname, '../../build/icon.png'),
       show: false,
       contextIsolation: true,
       nodeIntegration: false,
@@ -50,6 +65,7 @@ if (!gotTheLock) {
       return { action: 'deny' }
     })
 
+    //this opens devtool automatically
     if (is.dev) {
       mainWindow.webContents.openDevTools()
     }
@@ -65,34 +81,60 @@ if (!gotTheLock) {
 
   // This method will be called when Electron has finished
   // initialization and is ready to create browser windows.
-  app.whenReady().then(() => {
+  // Some APIs can only be used after this event occurs.
+
+  app.whenReady().then( async () => {
+
+    //notify app readiness
+    console.log('==== APP IS READY - spooling other processes ====')
     // Set app user model id for windows
     electronApp.setAppUserModelId('com.mediaunboxed.desktop')
 
+    // Start the backend server directly in this process
+    try {
+      console.log('Starting embedded backend server...')
+      networkConfig = await startServer()
+      console.log('Backend server started with config:', networkConfig)
+    } catch (error) {
+      console.error('Failed to start backend server:', error)
+    }
+
+
+    // // Determine backend path based on whether app is packaged
+    // let backendPath
+    // if (is.dev) {
+    //   backendPath = join(__dirname, '../../backend/index.js')
+    // } else {
+    //   // In production, backend is in resources/backend
+    //   backendPath = join(process.resourcesPath, 'backend/index.js')
+    // }
+
+    // console.log('Starting backend from:', backendPath)
+
     //  Start Express Server as a child process
-    const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc'], // Enable IPC
-      env: {
-        ...process.env,
-        NODE_ENV: is.dev ? 'development' : 'production'
-      }
-    })
+    // serverProcess = spawn(process.execPath, [backendPath], {
+    //   stdio: ['inherit', 'inherit', 'inherit', 'ipc'], // Enable IPC
+    //   env: {
+    //     ...process.env,
+    //     NODE_ENV: is.dev ? 'development' : 'production'
+    //   }
+    // })
 
-    // Listen for messages from backend
-    serverProcess.on('message', (message) => {
-      if (message.type === 'network-config') {
-        networkConfig = message.config
-        console.log('Received network config from backend:', networkConfig)
-      }
-    })
+    // // Listen for messages from backend
+    // serverProcess.on('message', (message) => {
+    //   if (message.type === 'network-config') {
+    //     networkConfig = message.config
+    //     console.log('Received network config from backend:', networkConfig)
+    //   }
+    // })
 
-    serverProcess.on('error', (err) => {
-      console.error('Failed to start server:', err)
-    })
+    // serverProcess.on('error', (err) => {
+    //   console.error('Failed to start server:', err)
+    // })
 
-    serverProcess.on('exit', (code) => {
-      console.log(`Server exited with code: ${code}`)
-    })
+    // serverProcess.on('exit', (code) => {
+    //   console.log(`Server exited with code: ${code}`)
+    // })
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
@@ -130,25 +172,12 @@ if (!gotTheLock) {
       // dock icon is clicked and there are no other windows open.
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+
   })
 
-  // Cleanup when app is closing
-  app.on('before-quit', (event) => {
-    if (serverProcess) {
-      console.log('🛑 Shutting down backend server...')
-      serverProcess.kill('SIGTERM')
-
-      // Give server time to shutdown gracefully
-      setTimeout(() => {
-        if (serverProcess) {
-          console.log('🔪 Force killing backend server...')
-          serverProcess.kill('SIGKILL')
-        }
-      }, 5000)
-    }
-  })
-
-  // Quit when all windows are closed, except on macOS
+  // Quit when all windows are closed, except on macOS. There, it's common
+  // for applications and their menu bar to stay active until the user quits
+  // explicitly with Cmd + Q.
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit()
