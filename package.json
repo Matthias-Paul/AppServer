@@ -11,13 +11,10 @@
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "prebuild": "cd backend && npm install",
-
     "clean": "rm -rf dist/ out/ node_modules/.cache/ ~/.cache/electron ~/.cache/electron-builder",
     "clean:build": "npm run clean && npm run build:mac",
-    "prebuild:mac": "rm -rf dist/ build/ out/",
+    "prebuild:mac": "rm -rf dist/ out/",
     "clean:builder": "npx electron-builder install-app-deps --force",
-
-
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps && cd backend && npm install",
     "build:unpack": "npm run build && electron-builder --dir",
@@ -28,21 +25,10 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/react-query": "^5.80.6",
-    "qrcode": "^1.5.4",
-    "react-hot-toast": "^2.5.2",
-    "react-icons": "^5.5.0",
-    "react-qr-code": "^2.0.15",
-    "react-redux": "^9.2.0",
-    "react-router-dom": "^7.6.2",
-    "react-select": "^5.10.1",
-    "recharts": "^2.15.3",
-    "redux-persist": "^6.0.0",
-    "sequelize-cli": "^6.6.3",
-    "tailwindcss": "^4.1.8",
-    "@ffprobe-installer/ffprobe": "^2.1.2",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -55,9 +41,20 @@
     "multer": "^2.0.1",
     "nodemon": "^3.1.10",
     "pg-hstore": "^2.3.4",
+    "qrcode": "^1.5.4",
+    "react-hot-toast": "^2.5.2",
+    "react-icons": "^5.5.0",
+    "react-qr-code": "^2.0.15",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.2",
+    "react-select": "^5.10.1",
+    "recharts": "^2.15.3",
+    "redux-persist": "^6.0.0",
     "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
     "sqlite3": "^5.1.7",
-    "sudo-prompt": "^9.2.1"
+    "sudo-prompt": "^9.2.1",
+    "tailwindcss": "^4.1.8"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config": "^2.0.0",
@@ -82,19 +79,22 @@
       "out/**/*",
       "backend/**/*",
       ".env",
-      "!backend/node_module_old/**/*",
       "!backend/node_modules/.cache/**/*"
     ],
     "extraResources": [
       {
         "from": ".env",
         "to": ".env",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "backend/.env",
         "to": "backend/.env",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "directories": {
@@ -106,11 +106,17 @@
       "target": [
         {
           "target": "pkg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "identity": "W7B8LSD8Q4"
@@ -120,13 +126,18 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
     "linux": {
       "icon": "build/icon.png",
-      "target": ["AppImage", "deb"]
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     }
   }
 }
