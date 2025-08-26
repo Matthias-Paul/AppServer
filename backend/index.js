@@ -10,6 +10,7 @@ import authRoute from './routes/auth.route.js'
 import adminRoute from './routes/admin.route.js'
 import mobileRoute from './routes/mobile.route.js'
 import multer from 'multer'
+import { getStoragePath } from './utils/getStoragePath.js'
 // import { fileURLToPath } from 'url'
 
 dotenv.config()
@@ -57,7 +58,10 @@ app.use((err, req, res, next) => {
   }
 })
 
-app.use('/fileStorage', express.static(path.join(process.cwd(), 'backend/fileStorage')))
+// app.use('/fileStorage', express.static(path.join(process.cwd(), 'backend/fileStorage')))
+app.use('/fileStorage', express.static(getStoragePath()))
+
+console.log('Serving static files from:', getStoragePath())
 
 // Global config storage
 let globalConfig = null
@@ -89,6 +93,12 @@ app.get('/api/config', (req, res) => {
 export async function startServer() {
   try {
     console.log('=== BACKEND STARTUP DEBUG ===')
+
+    console.log('Initializing storage directories...')
+    getStoragePath('images') // This will create the directory if it doesn't exist
+    getStoragePath('videos') // Add other subdirectories as needed
+    getStoragePath('documents')
+    console.log('Storage directories initialized')
     const { ip, ssid, password } = await getNetworkInfo()
     console.log('Network info retrieved successfully')
 

@@ -4,6 +4,11 @@ import icon from '../../resources/icon.png?asset'
 // import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import path from 'path'
+import dotenv from 'dotenv'
+
+import { loadEnvironmentVariables } from '../utils/env-loader.js'
+
 
 // Import backend server function directly
 import { startServer } from '../../backend/index.js'
@@ -17,14 +22,19 @@ const gotTheLock = app.requestSingleInstanceLock()
 // Store network configuration
 let networkConfig = null
 
-const path = require('path');
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-} else {
-  // For production, load from the app resources
-  const envPath = path.join(process.resourcesPath, '.env');
-  require('dotenv').config({ path: envPath });
-}
+// Load environment variables
+// if (app.isPackaged) {
+//   // In production, load from resources directory
+//   dotenv.config({
+//     path: path.join(process.resourcesPath, '.env')
+//   })
+// } else {
+//   // In development, load from project root
+//   dotenv.config()
+// }
+
+// Load environment variables first thing
+loadEnvironmentVariables()
 
 // Function to set config from backend
 // export function setNetworkConfig(config) {
