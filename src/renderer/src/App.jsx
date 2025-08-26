@@ -25,7 +25,10 @@ import AddExistingMediaToService from './components/AddExistingMediaToService'
 import CreditHistory from "./pages/CreditHistory"
 import CreditUsage from  "./pages/CreditUsage"
 import CreditAllocation from  "./pages/CreditAllocation"
-
+import SalesRepMediaPage from './pages/sales-rep-pages/SalesRepMediaPage'
+import SalesRepLayout from './pages/sales-rep-pages/SalesRepLayout'
+import SalesRepCreditPage from './pages/sales-rep-pages/SalesRepCreditPage'
+import SalesRepAnalyticsPage from './pages/sales-rep-pages/SalesRepAnalyticsPage'
 
 
 function App() {
@@ -36,6 +39,17 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
+
+          {/* salesRep routes (protected) */}
+          <Route element={<ProtectedRoute role="sales_rep" />}>
+            <Route path="/salesRep" element={ <SalesRepLayout /> }>
+                <Route index element={<SalesRepMediaPage />} />
+                <Route path="credit" element={<SalesRepCreditPage />} />
+                <Route path="analytics" element={<SalesRepAnalyticsPage />} />
+            </Route>
+          </Route>
+
 
           {/* Admin routes (protected) */}
           <Route element={<ProtectedRoute role="admin" />}>
@@ -53,7 +67,7 @@ function App() {
                 <Route path="history" element={<CreditHistory />} />
                 <Route path="usage" element={<CreditUsage />} />
 
-                
+
               </Route>
               <Route path="settings" element={<Settings />} />
               <Route path="service/newService" element={<CreateNewService />} />
@@ -68,6 +82,7 @@ function App() {
 
             </Route>
           </Route>
+
         </Routes>
 
         <Toaster position="top-right" />

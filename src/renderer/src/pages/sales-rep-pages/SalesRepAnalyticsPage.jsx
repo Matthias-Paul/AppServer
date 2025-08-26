@@ -2,11 +2,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { useInfiniteQuery, useQueryClient, useMutation, useQuery} from '@tanstack/react-query'
-import getBackendURL from '../components/GetBackendURL.jsx'
+import getBackendURL from '../../components/GetBackendURL.jsx'
 
 
 
-const SalesAnalytics = () => {
+const SalesRepAnalyticsPage = () => {
+
   const navigate = useNavigate()
   const [baseURL, setBaseURL] = useState('')
   const token = localStorage.getItem('token')
@@ -90,7 +91,7 @@ const SalesAnalytics = () => {
           <h5 className="text-[20px] "> Downloads </h5>
         </div>
         <div className="flex flex-col items-center text-center justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
-          <h1 className="font-bold text-[30px] ">₦{data?.avgRevenue?.toFixed(2) ||  "--"  }</h1>
+          <h1 className="font-bold text-[30px] ">₦{data?.avgRevenue?.toFixed(2)  ||  "--"  }</h1>
           <h5 className="text-[20px] ">Avg. Revenue Per User</h5>
         </div>
         <div className="flex flex-col items-center text-center  justify-center bg-[#F8F9FA] border border-[#E1E7F1] px-9 py-4 rounded-lg  ">
@@ -176,4 +177,7 @@ const SalesAnalytics = () => {
   )
 }
 
-export default SalesAnalytics
+export default SalesRepAnalyticsPage
+
+
+

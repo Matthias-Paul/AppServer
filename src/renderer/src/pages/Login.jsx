@@ -59,8 +59,11 @@ const Login = () => {
       console.log('login user:', data.user)
       setEmail('')
       setPassword('')
-
-      navigate('/redirector')
+      if (data.user.role === 'admin') {
+        navigate('/redirector')
+      } else {
+        navigate('/salesRep')
+      }
     },
     onError: (error) => {
       toast.error(error.message)

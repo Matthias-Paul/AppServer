@@ -6,8 +6,10 @@ import { RiNodeTree } from 'react-icons/ri'
 import { FiSettings, FiChevronRight, FiChevronLeft } from 'react-icons/fi'
 import { HiHome } from 'react-icons/hi'
 import { useDispatch } from 'react-redux'
-import { logOutSuccess } from '../redux/slice/adminSlice'
-const Sidebar = () => {
+import { logOutSuccess } from '../../redux/slice/adminSlice'
+
+
+const SalesRepSidebar = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -45,35 +47,19 @@ const Sidebar = () => {
 
       <nav className="flex flex-col">
         {[
-          { to: '/admin', icon: <HiHome className="w-5 h-5" />, label: 'Dashboard', exact: true },
-          { to: '/admin/users', icon: <FaUser className="w-5 h-5" />, label: 'User Management' },
+          { to: '/salesRep', icon: <MdOndemandVideo className="w-5 h-5" />,label: 'Media Management', exact: true },
           {
-            to: '/admin/credit',
+            to: '/salesRep/credit',
             icon: <FaCreditCard className="w-5 h-5" />,
             label: 'Credit Management'
           },
+
           {
-            to: '/admin/media',
-            icon: <MdOndemandVideo className="w-5 h-5" />,
-            label: 'Media Management'
-          },
-          {
-            to: '/admin/service',
-            icon: <FaRegFileAlt className="w-5 h-5" />,
-            label: 'Service Management'
-          },
-          {
-            to: '/admin/sales',
+            to: '/salesRep/analytics',
             icon: <FaChartLine className="w-5 h-5" />,
             label: 'Sales Analytics'
-          },
-          {
-            to: '/admin/network',
-            icon: <RiNodeTree className="w-5 h-5" />,
-            label: 'Network & Connectivity'
-          },
-          { to: '/admin/settings', icon: <FiSettings className="w-5 h-5" />, label: 'Settings' }
-        ].map(({ to, icon, label, exact }) => (
+          }
+          ].map(({ to, icon, label, exact }) => (
           <NavLink
             to={to}
             end={exact}
@@ -103,4 +89,4 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar
+export default SalesRepSidebar
