@@ -1,9 +1,12 @@
 node_modules
+node_modules_old
 backend/node_modules
+backend/node_modules_old
 backend/fileStorage/documents
 backend/fileStorage/images
 backend/fileStorage/videos
-backend/fileStorage/audio
+backend/fileStorage/audios
+backend/data-storage/db.sqlite
 dist
 out
 /.env

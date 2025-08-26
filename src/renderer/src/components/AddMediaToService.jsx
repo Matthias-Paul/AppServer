@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 const AddMediaToService = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [isUploadFile, setIsUploadFile] = useState(true)
 
   const [serviceDetails, setServiceDetails] = useState(null)
   const [mediaCount, setMediaCount] = useState(0)
@@ -18,31 +19,11 @@ const AddMediaToService = () => {
   const [fileName, setFileName] = useState('')
   const [description, setDescription] = useState('')
   const [title, setTitle] = useState('')
+    const [minister_name, setMinister_name] = useState('')
+
   const [price, setPrice] = useState('')
   const queryClient = useQueryClient()
   const [filePath, setFilePath] = useState('')
-
-  // const handleFileChange = (e) => {
-  //   if (e.target.files.length > 0) {
-  //     const file = e.target.files[0]
-  //     setFileName(file.name)
-
-  //     const ext = file.name.split('.').pop().toLowerCase()
-  //     const extMap = {
-  //       image: ['jpg', 'jpeg', 'png', 'gif'],
-  //       audio: ['mp3', 'wav', 'aac'],
-  //       video: ['mp4', 'avi', 'mov'],
-  //       document: ['pdf', 'txt']
-  //     }
-
-  //     for (const type in extMap) {
-  //       if (extMap[type].includes(ext)) {
-  //         setMediaType(type)
-  //         break
-  //       }
-  //     }
-  //   }
-  // }
 
   const handleBrowse = async () => {
     if (!window.electronAPI) {
@@ -53,12 +34,29 @@ const AddMediaToService = () => {
     const filePath = await window.electronAPI.selectMediaFile()
     if (filePath) {
       setFilePath(filePath)
-      console.log('Selected file:', filePath)
+
+      const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
+      setFileName(fileNameOnly)
+
+      const ext = fileNameOnly.split('.').pop().toLowerCase()
+      const extMap = {
+        image: ['jpg', 'jpeg', 'png', 'gif'],
+        audio: ['mp3', 'wav', 'aac'],
+        video: ['mp4', 'avi', 'mov'],
+        document: ['pdf', 'txt']
+      }
+
+      for (const [type, extensions] of Object.entries(extMap)) {
+        if (extensions.includes(ext)) {
+          setMediaType(type)
+          break
+        }
+      }
     }
   }
 
-  console.log(mediaType)
-  console.log(fileName)
+  console.log('Selected file:', filePath)
+  console.log('Media type:', mediaType)
 
   const fetchServiceDetails = async () => {
     const baseURL = await getBackendURL()
@@ -96,9 +94,6 @@ const AddMediaToService = () => {
       body: formData
     })
 
-    // if (!response.ok) {
-    //   throw new Error('Failed to upload media')
-    // }
     if (!response.ok) {
       let errorMessage = 'Failed to upload file'
 
@@ -128,6 +123,8 @@ const AddMediaToService = () => {
       setPrice('')
       setDescription('')
       setFileName('')
+      setFilePath('')
+      setMinister_name("")
     },
     onError: (error) => {
       toast.error(error.message || 'Error while uploading')
@@ -135,7 +132,7 @@ const AddMediaToService = () => {
     }
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     const formData = new FormData()
@@ -143,7 +140,32 @@ const AddMediaToService = () => {
     formData.append('description', description)
     formData.append('price', price)
     formData.append('file_type', mediaType)
-    formData.append('file', document.getElementById('file-upload').files[0])
+    formData.append('file_full_path', filePath)
+    formData.append('is_upload', isUploadFile)
+    formData.append('minister_name', minister_name)
+
+    const stats = window.electronAPI.getFileStats(filePath)
+    if (stats) {
+      const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2)
+      console.log(`Size: ${sizeInMB} MB`)
+
+      formData.append('file_size', sizeInMB)
+    }
+    if (isUploadFile && window.electronAPI.readFileAsBlob) {
+      try {
+        const { buffer, mimeType } = await window.electronAPI.readFileAsBlob(filePath)
+        const blob = new Blob([new Uint8Array(buffer)], {
+          type: mimeType || 'application/octet-stream'
+        })
+
+        const fileNameOnly = filePath.split(/(\\|\/)/g).pop()
+        formData.append('file', blob, fileNameOnly)
+      } catch (err) {
+        toast.error('Failed to read file from disk')
+        console.error(err)
+        return
+      }
+    }
 
     mutation.mutate(formData)
   }
@@ -211,19 +233,20 @@ const AddMediaToService = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block font-semibold mb-1">File Path</label>
+                <label className="block text-lg font-semibold mb-1">File Path</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={filePath}
+                    required
                     readOnly
                     placeholder="No file selected"
-                    className="border px-2 py-3 w-full text-lg focus:outline-none"
+                    className="border px-2 border-[#0D47A1] rounded-lg py-3 w-full text-lg focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleBrowse}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+                    className="bg-[#0D47A1] cursor-pointer text-white px-6 py-3 rounded-lg"
                   >
                     Browse
                   </button>
@@ -259,10 +282,53 @@ const AddMediaToService = () => {
                 />
               </div>
 
+               <div className="mb-6   mt-4 ">
+                <label className="block text-[#0D47A1]  text-lg  font-semibold mb-1 ">
+                  {' '}
+                  Minister Name (Otional){' '}
+                </label>
+                <input
+                  placeholder="Add minister name"
+                  value={minister_name}
+                  onChange={(e) => setMinister_name(e.target.value)}
+                  className="border focus:outline-none px-2  py-3 w-full border-[#0D47A1] text-[#0D47A1]  rounded-md "
+                  type="text"
+                />
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-lg font-medium text-[#0D47A1]  mb-2">File</label>
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="is_uplaod"
+                      value="true"
+                      checked={isUploadFile === true}
+                      onChange={() => setIsUploadFile(true)}
+                      className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
+                    />
+                    <span className="text-md">Upload file</span>
+                  </label>
+
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="is_uplaod"
+                      value="false"
+                      checked={isUploadFile === false}
+                      onChange={() => setIsUploadFile(false)}
+                      className="text-[#0D47A1] cursor-pointer focus:ring-[#0D47A1]"
+                    />
+                    <span className="text-md">Network file</span>
+                  </label>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={mutation.isLoading}
-                className={`cursor-pointer mt-2 font-semibold bg-[#0D47A1] text-[#E3F2FD] px-9 py-2 rounded-lg ${
+                className={`cursor-pointer mt-4 font-semibold bg-[#0D47A1] text-[#E3F2FD] px-9 py-2 rounded-lg ${
                   mutation.isPending ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >

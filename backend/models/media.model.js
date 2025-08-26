@@ -20,6 +20,10 @@ Media.init(
       type: DataTypes.TEXT,
       allowNull: true
     },
+    minister_name: {
+      type: DataTypes.TEXT,
+      allowNull: true
+    },
     file_path: {
       type: DataTypes.STRING(500),
       allowNull: false
@@ -43,6 +47,10 @@ Media.init(
     price: {
       type: DataTypes.DECIMAL(8, 2),
       allowNull: false
+    },
+    file_source: {
+      type: DataTypes.STRING,
+      allowNull: false,
     }
   },
   {

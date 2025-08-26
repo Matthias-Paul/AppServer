@@ -107,18 +107,21 @@ export const serviceMediaValidator = [
 ];
 
 export const transactionValidator = [
-  body('user_id')
-    .notEmpty().withMessage('user_id is required')
-    .isInt({ gt: 0 }).withMessage('user_id must be a positive integer'),
 
-  body('media_id')
-    .notEmpty().withMessage('media_id is required')
-    .isInt({ gt: 0 }).withMessage('media_id must be a positive integer'),
 
-  body('credits_used')
-    .notEmpty().withMessage('credits_used is required')
-    .isDecimal({ decimal_digits: '0,2' }).withMessage('credits_used must be a decimal with up to 2 decimal places')
-    .custom(value => value > 0).withMessage('credits_used must be greater than 0'),
+  body('mediaId')
+    .notEmpty().withMessage('mediaId is required')
+    .isInt({ gt: 0 }).withMessage('mediaId must be a positive integer'),
+
+];
+
+export const serviceDetailsValidation = [
+
+
+  body('serviceId')
+    .notEmpty().withMessage('serviceId is required')
+    .isInt({ gt: 0 }).withMessage('serviceId must be a positive integer'),
+
 ];
 
 

@@ -2,15 +2,17 @@ import { BsCircleFill } from 'react-icons/bs'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import QRCode from 'react-qr-code'
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux'
 
 const NetworkManagement = () => {
+  const { churchProfile } = useSelector((state) => state.admin)
   const backendIp = import.meta.env.VITE_BACKEND_IP
   const backendPort = import.meta.env.VITE_BACKEND_PORT
   const backendSSID = import.meta.env.VITE_NETWORK_NAME
   const [serverIp, setServerIp] = useState(backendIp)
   const [serverPort, setServerPort] = useState(backendPort)
   const [ssid, setSsid] = useState(backendSSID)
-  const [churchName, setChurchName] = useState('St Michael')// this should  come from  redux  state
+  const [churchName, setChurchName] = useState(churchProfile?.church_name)
 
   const [password, setPassword] = useState('')
 
@@ -82,8 +84,13 @@ const NetworkManagement = () => {
   }
 
   const handleGenerateQRCode = () => {
-    if (!serverIp || !serverPort || !ssid || !password || !churchName) {
+    if (!serverIp || !serverPort || !ssid || !password ) {
       toast.error('All fields are required!')
+      return
+    }
+
+    if (!churchName ) {
+      toast.error('Church name is required, go to settings to update the church name!')
       return
     }
     setServerIp(serverIp)
@@ -99,7 +106,7 @@ const NetworkManagement = () => {
       server_port: serverPort,
       SSID: ssid,
       password: password,
-      churchName:churchName
+      churchName: churchName
     })
   }, [serverIp, serverPort, ssid, password, churchName])
 
@@ -124,7 +131,7 @@ const NetworkManagement = () => {
             <h2 className="my-4 font-bold text-[25px] "> Server Connection Details </h2>
             <div className="flex items-center justify-start font-semibold w-full mb-4 bg-[#F8F9FA] border border-[#E1E7F1] px-5 py-2 text-[20px] rounded">
               <BsCircleFill className="text-[#0D47A1] mr-2  w-5 h-5" /> Server Running - PORT{' '}
-              {`${import.meta.env.VITE_BACKEND_PORT} `}
+              {`${backendPort} `}
             </div>
             <h2 className=" font-bold text-[20px] "> Server IP Address </h2>
             <input
@@ -164,7 +171,9 @@ const NetworkManagement = () => {
               <QRCode ref={qrRef} fgColor="#0D47A1" size={200} value={qrValue} />
               <h2 className="text-center font-bold text-[20px] mt-[10px]"> QR Code</h2>
             </div>
-            <p className="my-7 text-[16px] 2xl:text-[24px] font-semibold ">Scan this code with the mobile app to connect</p>
+            <p className="my-7 text-[16px] 2xl:text-[24px] font-semibold ">
+              Scan this code with the mobile app to connect
+            </p>
             <div className="flex items-center gap-x-5 w-full justify-between">
               <button
                 onClick={downloadQR}

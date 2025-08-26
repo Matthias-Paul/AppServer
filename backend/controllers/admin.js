@@ -4,12 +4,24 @@ import User from '../models/users.model.js'
 import Service from '../models/service.model.js'
 import Media from '../models/media.model.js'
 import ServiceMedia from '../models/service-media.model.js'
+import ffmpeg from 'fluent-ffmpeg'
+import ffmpegPath from 'ffmpeg-static'
+ffmpeg.setFfmpegPath(ffmpegPath)
+import ChurchSetting from '../models/ChurchSettings.model.js'
+import Transaction from '../models/transaction.model.js'
+import CreditAllocation from '../models/creditsAllocation.model.js'
 import { v4 as uuidv4 } from 'uuid'
-import { Op, literal } from 'sequelize'
+import { Op, literal, QueryTypes } from 'sequelize'
+import { sequelize } from '../database/DB.config.js'
 import { validationResult, matchedData } from 'express-validator'
 import bcryptjs from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
+import { getMediaDuration } from '../utils/getMediaDuration.js'
+import UserActivity from '../models/userActivities.model.js'
+import MediaPurchase from '../models/mediaPurchase.model.js'
+import { getStorageUrlPath } from '../utils/getStoragePath.js'
+
 export const getUsers = async (req, res) => {
   try {
     if (!req.user || !req.user.id || req.user.role !== 'admin') {
@@ -65,13 +77,36 @@ export const getUsers = async (req, res) => {
 
 export const createService = async (req, res) => {
   try {
+    if (!req.user || typeof req.user !== 'object' || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
     const { name, theme, description, isActive } = req.body
+
     if (!name) {
       return res.status(400).json({
         success: false,
         message: 'Name is required'
       })
     }
+
+    const setting = await ChurchSetting.findByPk(1)
+
+    if (
+      !setting ||
+      setting.is_updated !== true ||
+      !setting.church_logo_file_path?.trim() ||
+      !setting.church_name?.trim() ||
+      !setting.church_banner_file_path?.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Update church name, logo and banner before creating service'
+      })
+    }
+
     // Handle file upload
     let bannerPath = null
     if (req.file) {
@@ -145,16 +180,20 @@ export const addMedia = async (req, res) => {
       file_full_path,
       is_upload,
       file_name,
+      minister_name,
       file_size
     } = req.body
 
     let finalFilePath = ''
     let finalFileSize = 0
+    let duration = ''
+    let fileSource = ''
 
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
       const ext = path.extname(file_full_path).toLowerCase()
       const mediaType = file_type + 's'
+      fileSource = 'upload file'
 
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
@@ -164,6 +203,9 @@ export const addMedia = async (req, res) => {
         fs.mkdirSync(destinationFolder, { recursive: true })
       }
 
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
       fs.copyFileSync(file_full_path, destinationPath)
 
       finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
@@ -175,11 +217,19 @@ export const addMedia = async (req, res) => {
       const mediaType = file_type + 's'
       finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
       finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'upload file'
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'network file'
     } else {
       return res.status(400).json({
         success: false,
@@ -193,8 +243,11 @@ export const addMedia = async (req, res) => {
       file_full_path,
       file_path: finalFilePath,
       file_type,
+      minister_name,
       file_size: finalFileSize || file_size,
-      price
+      price,
+      duration,
+      file_source: fileSource
     })
 
     await ServiceMedia.create({
@@ -317,20 +370,28 @@ export const createMedia = async (req, res) => {
       file_full_path,
       is_upload,
       file_name,
+      minister_name,
       file_size
     } = req.body
 
     let finalFilePath = ''
     let finalFileSize = 0
+    let duration = ''
+    let fileSource = ''
 
     // CASE 1: is_upload is true → from Electron
     if (is_upload === 'true') {
       const ext = path.extname(file_full_path).toLowerCase()
       const mediaType = file_type + 's'
+      fileSource = 'upload file'
 
       const uniqueFileName = `${uuidv4()}${ext}`
       const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
       const destinationPath = path.join(destinationFolder, uniqueFileName)
+
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
 
       if (!fs.existsSync(destinationFolder)) {
         fs.mkdirSync(destinationFolder, { recursive: true })
@@ -347,17 +408,26 @@ export const createMedia = async (req, res) => {
       const mediaType = file_type + 's'
       finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
       finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'upload file'
     } else if (is_upload === 'false') {
       // CASE 3: is_upload is false
 
       finalFilePath = file_full_path
       finalFileSize = file_size || 0
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'network file'
     } else {
       return res.status(400).json({
         success: false,
         message: 'No file provided.'
       })
     }
+    console.log('duration', duration)
 
     const media = await Media.create({
       title,
@@ -365,8 +435,11 @@ export const createMedia = async (req, res) => {
       file_full_path,
       file_path: finalFilePath,
       file_type,
+      duration,
+      minister_name,
       file_size: finalFileSize || file_size,
-      price
+      price,
+      file_source: fileSource
     })
 
     res.status(201).json({ success: true, media })
@@ -445,10 +518,9 @@ export const deleteMedia = async (req, res) => {
     const __dirname = dirname(__filename)
     const storageRoot = path.join(__dirname, '..')
 
-    console.log('storage', storageRoot)
     if (mediaToDelete.file_path && mediaToDelete.file_path.startsWith('/fileStorage')) {
       const filePath = path.join(storageRoot, mediaToDelete.file_path)
-      
+
       fs.unlink(filePath, (err) => {
         if (err) {
           console.warn('File deletion failed:', err.message)
@@ -523,6 +595,12 @@ export const addUser = async (req, res) => {
 
     const { password_hash: _, ...userWithoutPassword } = user.get({ plain: true })
 
+    await UserActivity.create({
+      user_id: user.id,
+      action: 'New user added to system',
+      detail: `${user.username} has been added to the system`
+    })
+
     res.status(201).json({
       success: true,
       user: userWithoutPassword,
@@ -536,3 +614,816 @@ export const addUser = async (req, res) => {
     })
   }
 }
+
+export const getMedia = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const media = await Media.findByPk(id)
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      mediaDetails: media
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const updateMedia = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const {
+      title,
+      description,
+      price,
+      file_type,
+      file_full_path,
+      is_upload,
+      file_name,
+      file_size,
+      minister_name
+    } = req.body
+
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const media = await Media.findByPk(id)
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
+    let duration = ''
+    let finalFilePath = media.file_path
+    let finalFileSize = media.file_size
+    let finalFileType = media.file_type
+    let fileSource = ''
+
+    if (is_upload === 'true') {
+      media.file_source = 'upload file'
+    } else if (is_upload === 'false') {
+      media.file_source = 'network file'
+    }
+
+    console.log('isUpload', is_upload)
+    // Only update file if new one is provided
+    if (is_upload && file_full_path) {
+      const ext = path.extname(file_full_path).toLowerCase()
+      const mediaType = file_type + 's'
+      fileSource = 'upload file'
+
+      const uniqueFileName = `${uuidv4()}${ext}`
+      const destinationFolder = path.join(process.cwd(), `backend/fileStorage/${mediaType}`)
+      const destinationPath = path.join(destinationFolder, uniqueFileName)
+
+      console.log('Destination folder:', destinationFolder)
+      console.log('Destination path:', destinationPath)
+
+      if (!fs.existsSync(destinationFolder)) {
+        fs.mkdirSync(destinationFolder, { recursive: true })
+      }
+
+      fs.copyFileSync(file_full_path, destinationPath)
+
+      console.log('File copied successfully!')
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      finalFilePath = `/fileStorage/${mediaType}/${uniqueFileName}`
+      finalFileSize = (fs.statSync(destinationPath).size / (1024 * 1024)).toFixed(2)
+      finalFileType = file_type
+    } else if (req.file) {
+      const mediaType = file_type + 's'
+      finalFilePath = `/fileStorage/${mediaType}/${req.file.filename}`
+      finalFileSize = (req.file.size / (1024 * 1024)).toFixed(2)
+      finalFileType = file_type
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'upload file'
+    } else if (!is_upload && file_full_path) {
+      finalFilePath = file_full_path
+      finalFileSize = file_size || 0
+      finalFileType = file_type
+      if (file_type === 'audio' || file_type === 'video') {
+        duration = await getMediaDuration(file_full_path)
+      }
+      fileSource = 'network file'
+    }
+
+    if (title) media.title = title
+    if (description !== undefined) media.description = description
+    if (price !== undefined) media.price = price
+    if (minister_name !== undefined) media.minister_name = minister_name
+
+    media.file_source = fileSource || media.file_source
+    console.log('file source', fileSource)
+
+    if (file_full_path || req.file || !is_upload) {
+      media.file_full_path = file_full_path
+      media.file_path = finalFilePath
+      media.file_size = finalFileSize
+      media.file_type = finalFileType
+      media.duration = duration
+    }
+
+    await media.save()
+    console.log(media.file_source)
+
+    res
+      .status(200)
+      .json({ success: true, updatedMedia: media, message: ' Media updated successfully' })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getAllServicesWithMedia = async (req, res) => {
+  try {
+    const { id } = req.params
+
+    const service = await Service.findByPk(id, {
+      include: [
+        {
+          model: Media,
+          as: 'media_files'
+        }
+      ]
+    })
+
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      })
+    }
+    return res.status(200).json({
+      success: true,
+      service
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const settings = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { churchName } = req.body
+
+    const logoFile = req.files?.church_logo?.[0]
+    const bannerFile = req.files?.church_banner?.[0]
+
+    const setting = (await ChurchSetting.findByPk(1)) || (await ChurchSetting.create({ id: 1 }))
+
+    if (churchName) setting.church_name = churchName
+
+    if (logoFile) {
+      setting.church_logo_file_path = getStorageUrlPath(logoFile.filename, 'images')
+      setting.church_logo_file_type = 'image'
+    }
+
+    if (bannerFile) {
+      setting.church_banner_file_path = getStorageUrlPath(bannerFile.filename, 'images')
+      setting.church_banner_file_type = 'image'
+    }
+
+    setting.is_updated = true
+
+    await setting.save()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Update successful',
+      setting
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const checkSettings = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const setting = await ChurchSetting.findByPk(1)
+
+    if (!setting || !setting.is_updated) {
+      return res.status(200).json({
+        success: true,
+        message: 'Update church name, logo and banner'
+      })
+    }
+
+    return res.status(200).json({
+      success: true,
+      setting
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const editService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { id } = req.params
+    const { name, theme, description, isActive } = req.body
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name is required'
+      })
+    }
+
+    const bannerPath = req.file ? `/fileStorage/images/${req.file.filename}` : null
+
+    const serviceToEdit = await Service.findByPk(id)
+    if (!serviceToEdit) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      })
+    }
+
+    serviceToEdit.name = name
+
+    if (description) serviceToEdit.description = description
+    if (theme) serviceToEdit.theme = theme
+    serviceToEdit.is_active = isActive
+    if (bannerPath) serviceToEdit.banner_image = bannerPath
+
+    await serviceToEdit.save()
+
+    return res.status(200).json({
+      success: true,
+      message: 'Service edited successfully',
+      service: serviceToEdit
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const removeMediaFromService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { serviceId, mediaId } = req.params
+
+    const mediaToRemove = await Media.findByPk(mediaId)
+    if (!mediaToRemove) {
+      return res.status(400).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
+
+    const service = await Service.findByPk(serviceId)
+    if (!service) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service not found'
+      })
+    }
+
+    await ServiceMedia.destroy({ where: { media_id: mediaId, service_id: serviceId } })
+    return res.status(200).json({
+      success: true,
+      message: 'Media removed successfully'
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getConnectionStatus = async (req, res) => {
+  try {
+    const setting = await ChurchSetting.findByPk(1)
+    const { username } = req.body
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username is required'
+      })
+    }
+
+    const user = await User.findOne({ where: { username } })
+    let account_exist = ''
+
+    if (!user) {
+      account_exist = 'no'
+    }
+    if (user) {
+      account_exist = 'yes'
+    }
+    return res.status(200).json({
+      status: 'Connected',
+      logo: setting?.church_logo_file_path || '',
+      church_name: setting?.church_name || 'Unknown',
+      account_exist
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      status: 'error',
+      message: 'Internal Server error'
+    })
+  }
+}
+
+export const addExistingMediaToService = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { serviceId, mediaId } = req.params
+
+    const service = await Service.findByPk(serviceId)
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: 'Service not found'
+      })
+    }
+
+    const media = await Media.findByPk(mediaId)
+    if (!media) {
+      return res.status(404).json({
+        success: false,
+        message: 'Media not found'
+      })
+    }
+
+    const existing = await ServiceMedia.findOne({
+      where: {
+        service_id: serviceId,
+        media_id: mediaId
+      }
+    })
+
+    if (existing) {
+      return res.status(409).json({
+        success: false,
+        message: 'Media already exists in service'
+      })
+    }
+
+    const mediaAdded = await ServiceMedia.create({
+      service_id: serviceId,
+      media_id: mediaId
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: 'Media added to service successfully',
+      mediaAdded
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const allocateCredits = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role === 'client') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { id } = req.params
+    const { credit, reason } = req.body
+
+    if (!id || !credit || !reason) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required'
+      })
+    }
+
+    const creditToAdd = parseFloat(credit)
+    if (isNaN(creditToAdd) || creditToAdd <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Credit must be a valid positive number'
+      })
+    }
+
+    const user = await User.findByPk(id)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      })
+    }
+
+    user.credits = (user.credits || 0) + creditToAdd
+    await user.save()
+
+    const CreditAllocationDetails = await CreditAllocation.create({
+      user_id: id,
+      credits_added: creditToAdd,
+      reason,
+      generatedBy: req.user.id
+    })
+    await UserActivity.create({
+      user_id: id,
+      action: 'Credit Allocation',
+      detail: `${creditToAdd} credits was allocated to ${user.username}  `
+    })
+
+    return res.status(201).json({
+      success: true,
+      CreditAllocationDetails,
+      message: 'Credit allocated to user successfully'
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    })
+  }
+}
+
+export const creditHistory = async (req, res) => {
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 10
+  const offset = (page - 1) * limit
+
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const { rows, count } = await CreditAllocation.findAndCountAll({
+      limit,
+      offset,
+      order: [['created_at', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'allocatedTo',
+          attributes: ['id', 'email']
+        },
+        {
+          model: User,
+          as: 'allocatedBy',
+          attributes: ['id', 'email']
+        }
+      ]
+    })
+
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      hasNextPage
+    })
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    })
+  }
+}
+
+export const creditUsage = async (req, res) => {
+  const page = Number(req.query.page) || 1
+  const limit = Number(req.query.limit) || 10
+  const offset = (page - 1) * limit
+
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const count = await Transaction.count()
+
+    const transactions = await Transaction.findAll({
+      limit,
+      offset,
+      order: [['transaction_date', 'DESC']],
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username', 'email']
+        },
+        {
+          model: Media,
+          as: 'media',
+          attributes: ['id', 'title', 'file_type', 'price']
+        }
+      ]
+    })
+
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
+
+    return res.status(200).json({
+      success: true,
+      transactions,
+      hasNextPage
+    })
+  } catch (error) {
+    console.error('creditUsage error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getRecentActivities = async (req, res) => {
+  if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Unauthorized access'
+    })
+  }
+
+  try {
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 20
+    const offset = (page - 1) * limit
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
+    const { count, rows } = await UserActivity.findAndCountAll({
+      where: {
+        created_at: {
+          [Op.gte]: twentyFourHoursAgo
+        }
+      },
+      order: [['created_at', 'DESC']],
+      limit,
+      offset,
+      include: [
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'email', 'username']
+        }
+      ]
+    })
+
+    const totalPages = Math.ceil(count / limit)
+    const hasNextPage = page < totalPages
+
+    return res.status(200).json({
+      success: true,
+      data: rows,
+      hasNextPage
+    })
+  } catch (error) {
+    console.error('getRecentActivities error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getDashboardDetails = async (req, res) => {
+  if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Unauthorized access'
+    })
+  }
+
+  try {
+    const totalUsers = await User.count()
+    const totalMedia = await Media.count()
+    const totalActiveService = await Service.count({ where: { is_active: 1 } })
+    const totalCreditsAllocated = await CreditAllocation.sum('credits_added')
+
+    return res.status(200).json({
+      success: true,
+      totalUsers,
+      totalMedia,
+      totalActiveService,
+      totalCreditsAllocated: totalCreditsAllocated || 0
+    })
+  } catch (error) {
+    console.error('getDashboardDetails error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+export const getSalesStats = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+    const totalUsers = await User.count()
+
+    const totalRevenue = (await CreditAllocation.sum('credits_added')) || 0
+    const totalDownload = (await MediaPurchase.count({})) || 0
+    const avgRevenue = totalUsers > 0 ? totalRevenue / totalUsers : 0
+
+    // Calculate user retention based on users with credits vs total users
+    const activeUsers = await User.count({
+      where: {
+        credits: {
+          [Op.gt]: 0 // Users with credits (active users)
+        }
+      }
+    })
+    const userRetention = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0
+
+    return res.status(200).json({
+      success: true,
+      totalRevenue,
+      totalDownload,
+      avgRevenue,
+      userRetention: Math.round(userRetention * 100) / 100 // Round to 2 decimal places
+    })
+  } catch (error) {
+    console.error('getSalesStats error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+
+export const getSalesChart = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized access'
+      })
+    }
+
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+    const timePeriods = [
+      { name: 'Today', days: 0 },
+      { name: 'Last 7d', days: 7 },
+      { name: 'Last 30d', days: 30 },
+      { name: 'Last 3mo', days: 90 },
+      { name: 'Last 6mo', days: 180 },
+      { name: 'Last 9mo', days: 270 },
+      { name: 'Last 1yr', days: 365 }
+    ];
+
+    // Calculate revenue for each time period using credit allocation
+    const revenueTrends = await Promise.all(
+      timePeriods.map(async (period) => {
+        const startDate = new Date(today)
+        startDate.setDate(startDate.getDate() - period.days)
+
+        // Get total credits added for the period
+        const totalCredits = await CreditAllocation.sum('credits_added', {
+          where: {
+            created_at: {
+              [Op.gte]: startDate,
+              [Op.lte]: now
+            }
+          }
+        })
+
+        return {
+          name: period.name,
+          value: Math.round((totalCredits || 0) * 100) / 100
+        }
+      })
+    )
+
+    // Calculate top services by revenue using raw SQL for better performance
+    const topServices = await sequelize.query(`
+      SELECT
+        s.id,
+        s.name,
+        COUNT(t.id) as total_transactions,
+        COALESCE(SUM(t.credits_used), 0) as total_revenue
+      FROM services s
+      LEFT JOIN service_media sm ON s.id = sm.service_id
+      LEFT JOIN media m ON sm.media_id = m.id
+      LEFT JOIN transactions t ON m.id = t.media_id
+      GROUP BY s.id, s.name
+      HAVING total_revenue > 0
+      ORDER BY total_revenue DESC
+      LIMIT 15
+    `, {
+      type: QueryTypes.SELECT
+    })
+
+    // Format top services data (raw SQL returns plain objects)
+    const formattedTopServices = topServices.map(service => ({
+      id: service.id,
+      name: service.name,
+      revenue: parseFloat(service.total_revenue) || 0,
+      transactions: parseInt(service.total_transactions) || 0
+    }))
+
+    return res.status(200).json({
+      success: true,
+      revenueTrends,
+      topServices: formattedTopServices
+    })
+
+  } catch (error) {
+    console.error('getSalesChart error:', error)
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error'
+    })
+  }
+}
+
+

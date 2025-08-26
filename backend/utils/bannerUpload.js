@@ -1,18 +1,12 @@
 import multer from 'multer'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import fs from 'fs'
+import { getStoragePath } from './getStoragePath.js'
 
 // Set storage engine
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(process.cwd(), './backend/fileStorage/images')
-
-    // ✅ Ensure the folder exists
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true })
-    }
-
+    const uploadPath = getStoragePath('images')
     cb(null, uploadPath)
   },
   filename: function (req, file, cb) {

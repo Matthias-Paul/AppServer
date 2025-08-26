@@ -23,18 +23,20 @@ const DashboardTable = ({ isLoading, activities }) => {
                     index === activities?.length - 1 ? 'border-b-0' : ''
                   }`}
                 >
-                  <td className="py-2 pr-4 sm:py-4  font-medium">{activity?.time}</td>
-                  <td className="py-2 px-4 sm:py-4  font-medium">{activity?.email}</td>
+                <td className="py-2 pr-4 sm:py-4 font-medium">
+                  {new Date(activity?.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </td>
+                  <td className="py-2 px-4 sm:py-4  font-medium">{activity?.user?.email}</td>
                   <td className="py-2 px-4  sm:py-4">{activity?.action}</td>
 
-                  <td className="py-2 px-4 sm:py-4 font-medium">{activity?.details}</td>
+                  <td className="py-2 px-4 sm:py-4 font-medium">{activity?.detail}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       ) : (
-        <div className="text-[#0D47A1] font-semibold text-lg">No Activities Found.</div>
+        <div className="text-[#0D47A1] font-semibold text-lg">No Recent Activities Found.</div>
       )}
     </div>
   )
