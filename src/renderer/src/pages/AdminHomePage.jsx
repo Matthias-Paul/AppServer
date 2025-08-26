@@ -115,7 +115,7 @@ const fetchDashBoardDetail = async()=>{
         <div className="flex justify-between items-center  ">
           <div className="flex items-center">
             <div className="flex flex-col">
-              <h2 className=" text-[#0D47A1]  font-bold text-3xl  xl:text-4xl  ">DashBoard</h2>
+              <h2 className=" text-[#0D47A1]  font-bold text-3xl  xl:text-4xl  ">Dashboard</h2>
               <h4 className="mt-2 text-lg font-semibold text-[#0D47A1] ">Wellcome, Admin.</h4>
             </div>
             <div>

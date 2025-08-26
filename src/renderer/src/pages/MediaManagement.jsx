@@ -215,7 +215,7 @@ const MediaManagement = () => {
                           {' '}
                           Edit{' '}
                         </button>
-                      </Link>  
+                      </Link>
                         <button
                           onClick={() => handleDelete(media?.id)}
                           className=" px-6 py-[6px] cursor-pointer text-[#E3F2FD] bg-[#0D47A1] font-semibold  text-[18px] rounded-lg   "
@@ -241,7 +241,7 @@ const MediaManagement = () => {
               )}
             </>
           ) : (
-            <div className="font-semibold text-[16px] mt-5 text-center "> No media found </div>
+            <div className="font-semibold text-[26px] mt-5 text-center "> No media found </div>
           )}
         </div>
       </div>
