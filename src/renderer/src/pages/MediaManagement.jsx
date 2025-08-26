@@ -243,7 +243,9 @@ const MediaManagement = () => {
               )}
             </>
           ) : (
+
             <div className="font-semibold text-lg mt-5 text-center "> No media found </div>
+
           )}
         </div>
       </div>

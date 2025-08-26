@@ -102,7 +102,7 @@ const CreditHistory = () => {
             </table>
           </div>
         ) : (
-          <div className="text-[#0D47A1] font-semibold text-lg">No history Found.</div>
+          <div className="text-[#0D47A1] font-semibold text-[26px]">No history Found.</div>
         )}
 
         {hasNextPage && (
