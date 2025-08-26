@@ -4,7 +4,9 @@ import fs from 'node:fs'
 import { Blob } from 'node:buffer'
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  getConfig: () => ipcRenderer.invoke('get-config')
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -21,10 +23,11 @@ if (process.contextIsolated) {
   window.api = api
 }
 
-
-
 contextBridge.exposeInMainWorld('electronAPI', {
   selectMediaFile: () => ipcRenderer.invoke('select-media-file'),
+
+  // Add the config method here as well for consistency
+  getConfig: () => ipcRenderer.invoke('get-config'),
 
   getFileBuffer: async (filePath) => {
     return new Promise((resolve, reject) => {

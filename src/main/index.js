@@ -1,9 +1,17 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { spawn } from 'child_process'
+// import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import path from 'path'
+import dotenv from 'dotenv'
+
+import { loadEnvironmentVariables } from '../utils/env-loader.js'
+
+
+// Import backend server function directly
+import { startServer } from '../../backend/index.js'
 
 // Handle __dirname with ESM
 const __filename = fileURLToPath(import.meta.url)
@@ -11,18 +19,42 @@ const __dirname = dirname(__filename)
 
 const gotTheLock = app.requestSingleInstanceLock()
 
+// Store network configuration
+let networkConfig = null
+
+// Load environment variables
+// if (app.isPackaged) {
+//   // In production, load from resources directory
+//   dotenv.config({
+//     path: path.join(process.resourcesPath, '.env')
+//   })
+// } else {
+//   // In development, load from project root
+//   dotenv.config()
+// }
+
+// Load environment variables first thing
+loadEnvironmentVariables()
+
+// Function to set config from backend
+// export function setNetworkConfig(config) {
+//   networkConfig = config
+//   console.log('Network config received in main process:', config)
+// }
+
 if (!gotTheLock) {
   app.quit()
 } else {
   let mainWindow
-
-
+  // let serverProcess = null // Declare serverProcess in the outer scope
 
   function createWindow() {
     // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    // const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
       width: 1400,
       height: 1000,
+      icon: path.join(__dirname, '../../build/icon.png'),
       show: false,
       contextIsolation: true,
       nodeIntegration: false,
@@ -43,6 +75,7 @@ if (!gotTheLock) {
       return { action: 'deny' }
     })
 
+    //this opens devtool automatically
     if (is.dev) {
       mainWindow.webContents.openDevTools()
     }
@@ -60,53 +93,87 @@ if (!gotTheLock) {
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
 
-  app.whenReady().then(() => {
+  app.whenReady().then( async () => {
+
+    //notify app readiness
+    console.log('==== APP IS READY - spooling other processes ====')
     // Set app user model id for windows
-    electronApp.setAppUserModelId('com.electron')
+    electronApp.setAppUserModelId('com.mediaunboxed.desktop')
+
+    // Start the backend server directly in this process
+    try {
+      console.log('Starting embedded backend server...')
+      networkConfig = await startServer()
+      console.log('Backend server started with config:', networkConfig)
+    } catch (error) {
+      console.error('Failed to start backend server:', error)
+    }
+
+
+    // // Determine backend path based on whether app is packaged
+    // let backendPath
+    // if (is.dev) {
+    //   backendPath = join(__dirname, '../../backend/index.js')
+    // } else {
+    //   // In production, backend is in resources/backend
+    //   backendPath = join(process.resourcesPath, 'backend/index.js')
+    // }
+
+    // console.log('Starting backend from:', backendPath)
 
     //  Start Express Server as a child process
+    // serverProcess = spawn(process.execPath, [backendPath], {
+    //   stdio: ['inherit', 'inherit', 'inherit', 'ipc'], // Enable IPC
+    //   env: {
+    //     ...process.env,
+    //     NODE_ENV: is.dev ? 'development' : 'production'
+    //   }
+    // })
 
-    const serverProcess = spawn(process.execPath, [join(__dirname, '../../backend/index.js')], {
-      stdio: 'inherit',
-      env: {
-        ...process.env,
-        NODE_ENV: is.dev ? 'development' : 'production'
-      }
-    })
+    // // Listen for messages from backend
+    // serverProcess.on('message', (message) => {
+    //   if (message.type === 'network-config') {
+    //     networkConfig = message.config
+    //     console.log('Received network config from backend:', networkConfig)
+    //   }
+    // })
 
-    serverProcess.on('error', (err) => {
-      console.error('Failed to start server:', err)
-    })
+    // serverProcess.on('error', (err) => {
+    //   console.error('Failed to start server:', err)
+    // })
 
-    serverProcess.on('exit', (code) => {
-      console.log(` Server exited with code: ${code}`)
-    })
+    // serverProcess.on('exit', (code) => {
+    //   console.log(`Server exited with code: ${code}`)
+    // })
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // IPC test
+    // IPC handlers
     ipcMain.on('ping', () => console.log('pong'))
 
+    // Handle config request from renderer
+    ipcMain.handle('get-config', () => {
+      console.log('Config requested from renderer, returning:', networkConfig)
+      return networkConfig
+    })
 
+    // Handle media file selection
+    ipcMain.handle('select-media-file', async () => {
+      const result = await dialog.showOpenDialog({
+        title: 'Select Media File',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
+        ]
+      })
 
-ipcMain.handle('select-media-file', async () => {
-  const result = await dialog.showOpenDialog({
-    title: 'Select Media File',
-    properties: ['openFile'],
-    filters: [
-      { name: 'Media', extensions: ['jpg', 'png', 'mp3', 'mp4', 'pdf', 'txt', 'wav', 'avi', 'mov'] }
-    ]
-  });
-
-  if (result.canceled) return null;
-  return result.filePaths[0]; // Full file path
-});
-
+      if (result.canceled) return null
+      return result.filePaths[0] // Full file path
+    })
 
     createWindow()
 
@@ -115,6 +182,7 @@ ipcMain.handle('select-media-file', async () => {
       // dock icon is clicked and there are no other windows open.
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
+
   })
 
   // Quit when all windows are closed, except on macOS. There, it's common
@@ -126,6 +194,3 @@ ipcMain.handle('select-media-file', async () => {
     }
   })
 }
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.

@@ -20,6 +20,7 @@ import { dirname } from 'path'
 import { getMediaDuration } from '../utils/getMediaDuration.js'
 import UserActivity from '../models/userActivities.model.js'
 import MediaPurchase from '../models/mediaPurchase.model.js'
+import { getStorageUrlPath } from '../utils/getStoragePath.js'
 
 export const getUsers = async (req, res) => {
   try {
@@ -809,12 +810,12 @@ export const settings = async (req, res) => {
     if (churchName) setting.church_name = churchName
 
     if (logoFile) {
-      setting.church_logo_file_path = `/fileStorage/images/${logoFile.filename}`
+      setting.church_logo_file_path = getStorageUrlPath(logoFile.filename, 'images')
       setting.church_logo_file_type = 'image'
     }
 
     if (bannerFile) {
-      setting.church_banner_file_path = `/fileStorage/images/${bannerFile.filename}`
+      setting.church_banner_file_path = getStorageUrlPath(bannerFile.filename, 'images')
       setting.church_banner_file_type = 'image'
     }
 
