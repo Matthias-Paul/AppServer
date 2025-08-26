@@ -34,7 +34,7 @@ const PORT = process.env.PORT || 7001
 app.use(cookieParser())
 app.use(
   cors({
-    origin: ['http://localhost:*', 'file://', 'app://', '*'],
+    origin: ['http://localhost:*', 'http://localhost:3000', 'file://', 'app://', '*'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']

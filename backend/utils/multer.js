@@ -31,16 +31,11 @@ const fileFilter = (req, file, cb) => {
   // Allow images, videos, audio, and some document types
   const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|avi|mkv|mov|wmv|flv|webm|mp3|wav|flac|aac|pdf|doc|docx|txt/
   const ext = path.extname(file.originalname).toLowerCase()
-  const mimeTypeAllowed =
-    file.mimetype.startsWith('image/') ||
-    file.mimetype.startsWith('video/') ||
-    file.mimetype.startsWith('audio/') ||
-    file.mimetype === 'application/pdf'
 
-  if (allowedTypes.test(ext.slice(1)) && mimeTypeAllowed) {
+  if (allowedTypes.test(ext.slice(1))) {
     cb(null, true)
   } else {
-    cb(new Error('Unsupported media file type'))
+    cb(new Error(`Unsupported file extension: ${ext}`))
   }
 }
 

@@ -13,7 +13,7 @@ const CreditManagement = () => {
             {' '}
             Credits Management{' '}
           </h2>
-         
+
         </div>
 
         <div className="flex gap-x-5 mt-5 ">

@@ -103,10 +103,10 @@ export const loginUser = async (req, res, next) => {
         message: 'User not found.'
       })
     }
-    if (user.role !== 'admin') {
+    if (user.role === 'client') {
       return res.status(404).json({
         success: false,
-        message: 'Unathourized, you are not an Admin.'
+        message: 'Unathourized Access'
       })
     }
 

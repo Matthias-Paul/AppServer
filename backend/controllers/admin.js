@@ -24,7 +24,7 @@ import { getStorageUrlPath } from '../utils/getStoragePath.js'
 
 export const getUsers = async (req, res) => {
   try {
-    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    if (!req.user || !req.user.id || req.user.role === 'client') {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
@@ -1300,7 +1300,7 @@ export const getDashboardDetails = async (req, res) => {
 
 export const getSalesStats = async (req, res) => {
   try {
-    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    if (!req.user || !req.user.id || req.user.role === 'client') {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
@@ -1341,7 +1341,7 @@ export const getSalesStats = async (req, res) => {
 
 export const getSalesChart = async (req, res) => {
   try {
-    if (!req.user || !req.user.id || req.user.role !== 'admin') {
+    if (!req.user || !req.user.id || req.user.role === 'client') {
       return res.status(403).json({
         success: false,
         message: 'Unauthorized access'
